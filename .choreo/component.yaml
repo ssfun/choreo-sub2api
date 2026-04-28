@@ -1,0 +1,20 @@
+schemaVersion: 1.2
+
+endpoints:
+  - name: sub2api
+    displayName: Sub2API REST
+    service:
+      basePath: /
+      port: 8080
+    type: REST
+    networkVisibilities:
+      - Public
+
+  - name: sub2api_ws
+    displayName: Sub2API WebSocket
+    service:
+      basePath: /
+      port: 8081
+    type: WS
+    networkVisibilities:
+      - Public

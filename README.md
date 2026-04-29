@@ -2,25 +2,49 @@
 
 # Version
 
-v0.0.0
+v0.1.119
 
 # Releases
 
-## 📦 Release v2.1.54
+> AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-This release was automatically published from PR #14231.
+- 邀请返利系统完善：新增返利冻结期机制、返利有效期、单人返利上限
+- 邀请返利功能开关：支持管理员全局开关邀请返利功能
+- 专属邀请设置：支持管理员为指定用户设置专属邀请码和返利比例
+- 补全 OAuth 注册路径（LinuxDo/OIDC/WeChat/Pending Flow）的邀请码绑定
 
-### Changes
-See PR description: https://github.com/lobehub/lobehub/pull/14231
+- 修复 Zpay 退款接口调用问题
+- 修正缓存 token 的 Anthropic 用量语义，修复 OpenAI 兼容层缓存统计不准确
+- 修复真实 Claude Code 客户端被误应用 body mimicry 导致 prompt caching 失效的问题
+- 修复 Stripe 支付页面被前端路由守卫拦截的问题
+- 修复 OpenAI responses 流式请求在 pre-output failover 期间下游连接超时断开的问题
+- 收紧 OpenAI responses 流式账号测试逻辑
 
-### Commit Message
-**Hotfix Scope:** Agent topic / thread navigation regression — stale chat state on agent switch
 
-> Clears residual topic state when navigating between agents, restores the active subtopic's title in the header, and keeps the sidebar's thread list expanded while a thread is open.
 
-## 🐛 What's Fixed
+---
 
-- **Stale topic on agent switch** — `ChatHydration` syncs `activeTopicId` / `activeThreadId` from the URL via `useLayoutEffect` and writes `null` (not `undefined`) so `/agent/agt_A/tpc_X` → `/agent/agt_B` no longer carries over the previous topic; *Start new topic* responds again.
-- **Conversation context isolation** — `ConversationProvider` keys its inner store on `contextKey`, so consumers don't read stale values for one render after agent / topic / thread identity changes.
-- **Sidebar thread list visibility** — `<ThreadList />` visibility is now driven by `urlTopicId` and accepts `topicId` as a prop, so the parent topic's thread list stays expanded while viewing a subtopic.
-- **Header thread title** — Header `Tags` reads the active thread's title from `s.threadMaps[s.activeTopicId]` when `activeThreadId` is set, falling back to `chat:thread.title` for unnamed threads.
+## 📥 Installation
+
+**Docker:**
+```bash
+# Docker Hub
+docker pull weishaw/sub2api:0.1.119
+
+# GitHub Container Registry
+docker pull ghcr.io/wei-shaw/sub2api:0.1.119
+```
+
+**One-line install (Linux):**
+```bash
+curl -sSL https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/deploy/install.sh | sudo bash
+```
+
+**Manual download:**
+Download the appropriate archive for your platform from the assets below.
+
+## 📚 Documentation
+
+- [GitHub Repository](https://github.com/Wei-Shaw/sub2api)
+- [Installation Guide](https://github.com/Wei-Shaw/sub2api/blob/main/deploy/README.md)
+

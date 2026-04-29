@@ -2,7 +2,7 @@
 
 这是面向 Choreo 平台的 [Wei-Shaw/sub2api](https://github.com/Wei-Shaw/sub2api) 适配仓库。
 
-## Version
+# Version
 
 v0.0.0
 
@@ -84,6 +84,6 @@ KOMARI_SECRET=your-komari-secret
 
 两个变量都非空时，容器启动脚本会自动启动 `/app/komari-agent`。
 
-## Releases
+# Releases
 
 当前占位版本为 `v0.0.0`。`.github/workflows/update-version.yml` 会定时检查 `Wei-Shaw/sub2api` 的 latest release，并更新本节。

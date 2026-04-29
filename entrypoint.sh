@@ -33,7 +33,11 @@ export AUTO_SETUP="${AUTO_SETUP:-true}"
 export SERVER_HOST="${SERVER_HOST:-0.0.0.0}"
 export SERVER_PORT="${SERVER_PORT:-8080}"
 export SERVER_MODE="${SERVER_MODE:-release}"
+export HOME="${HOME:-/tmp}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-/tmp/caddy-config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-/tmp/caddy-data}"
 export DATA_DIR="${DATA_DIR:-/tmp/sub2api}"
+export PRICING_DATA_DIR="${PRICING_DATA_DIR:-$DATA_DIR/pricing}"
 export LOG_OUTPUT_TO_STDOUT="${LOG_OUTPUT_TO_STDOUT:-true}"
 export LOG_OUTPUT_TO_FILE="${LOG_OUTPUT_TO_FILE:-false}"
 export DATABASE_PORT="${DATABASE_PORT:-5432}"
@@ -74,7 +78,7 @@ if ! is_valid_port "$LOCAL_REDIS_PORT"; then
     exit 1
 fi
 
-mkdir -p "$DATA_DIR" /tmp/redis /tmp/caddy-config /tmp/caddy-data
+mkdir -p "$DATA_DIR" "$PRICING_DATA_DIR" /tmp/redis "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"
 
 log "Redis" "Starting embedded Redis on ${LOCAL_REDIS_HOST}:${LOCAL_REDIS_PORT}"
 if [ -n "$REDIS_PASSWORD" ]; then

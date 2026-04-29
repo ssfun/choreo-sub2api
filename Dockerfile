@@ -44,7 +44,7 @@ RUN apk add --no-cache \
 
 RUN addgroup -g 10014 choreo && \
     adduser -u 10014 -G choreo -s /bin/sh -D choreo && \
-    mkdir -p /tmp/sub2api /tmp/redis /tmp/caddy-config /tmp/caddy-data && \
+    mkdir -p /tmp/sub2api /tmp/sub2api/pricing /tmp/redis /tmp/caddy-config /tmp/caddy-data && \
     chown -R 10014:10014 /tmp/sub2api /tmp/redis /tmp/caddy-config /tmp/caddy-data
     
 # ------------------------------------------------------------
@@ -61,7 +61,11 @@ ENV AUTO_SETUP=true \
     SERVER_HOST=0.0.0.0 \
     SERVER_PORT=8080 \
     SERVER_MODE=release \
+    HOME=/tmp \
+    XDG_CONFIG_HOME=/tmp/caddy-config \
+    XDG_DATA_HOME=/tmp/caddy-data \
     DATA_DIR=/tmp/sub2api \
+    PRICING_DATA_DIR=/tmp/sub2api/pricing \
     LOG_OUTPUT_TO_STDOUT=true \
     LOG_OUTPUT_TO_FILE=false \
     REDIS_HOST=127.0.0.1 \

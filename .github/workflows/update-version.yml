@@ -2,7 +2,7 @@ name: Auto Update Choreo Sub2API Version
 
 on:
   schedule:
-    # 每天 UTC 00:00 (北京时间 08:00) 运行
+    # 每天 UTC 00:00 (北京时间 08:00) 检查 Wei-Shaw/sub2api 最新 release。
     - cron: '0 0 * * *'
   workflow_dispatch:
 
@@ -67,7 +67,7 @@ jobs:
                   return f'<a href="{url}">{text}</a>'
 
               body_with_links = re.sub(pattern, link_replacer, safe_body)
-              text_content = f'<b>SubAPI Choreo upstream update detected</b>\n\n<b>New Version:</b> {html.escape(version)}\n\n{body_with_links}'
+              text_content = f'<b>Sub2API Choreo upstream update detected</b>\n\n<b>New Version:</b> {html.escape(version)}\n\n{body_with_links}'
 
               if len(text_content) > 4000:
                   text_content = text_content[:4000] + '\n...(content truncated)...'

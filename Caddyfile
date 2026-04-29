@@ -1,4 +1,5 @@
 {
+    # Choreo 运行环境中根文件系统只读，Caddy 的运行数据必须写入 /tmp。
     admin off
     auto_https off
     storage file_system /tmp/caddy-data
@@ -10,5 +11,6 @@
         format console
     }
 
+    # Choreo 的 WS endpoint 进入 8081 后，统一反代到 Sub2API 主服务端口。
     reverse_proxy 127.0.0.1:{$SERVER_PORT}
 }

@@ -1,62 +1,54 @@
-# ==========================================
-# 阶段 1: 构建阶段 (Builder)
-# ==========================================
-FROM golang:alpine AS builder
+# 构建可选的 Komari agent；最终镜像只复制二进制，避免把 Go 工具链带入运行层。
+FROM golang:alpine AS komari-agent-builder
 
 WORKDIR /src
 
-# 安装 git
 RUN apk add --no-cache git
 
-# 1. 拉取源码
-RUN git clone https://github.com/komari-monitor/komari-agent.git .
+RUN git clone https://github.com/komari-monitor/komari-agent.git . \
+    && git fetch --tags \
+    && git checkout "$(git describe --tags --abbrev=0)" \
+    && go mod download \
+    && VERSION="$(git describe --tags --always)" \
+    && CGO_ENABLED=0 go build \
+        -trimpath \
+        -ldflags="-s -w -X github.com/komari-monitor/komari-agent/update.CurrentVersion=${VERSION}" \
+        -o /out/komari-agent .
 
-# 2. 检出最新的 Tag
-RUN git fetch --tags && \
-    LATEST_TAG=$(git describe --tags --abbrev=0) && \
-    git checkout $LATEST_TAG
-
-# 3. 编译并注入版本号
-RUN VERSION=$(git describe --tags --always) && \
-    echo "--------------------------------------" && \
-    echo "正在构建版本: $VERSION" && \
-    echo "--------------------------------------" && \
-    go mod download && \
-    CGO_ENABLED=0 go build \
-    -trimpath \
-    -ldflags="-s -w -X github.com/komari-monitor/komari-agent/update.CurrentVersion=${VERSION}" \
-    -o komari-agent .
-
-# ==========================================
-# 第二阶段：运行环境 (Final Image)
-# 基于 weishaw/sub2api:latest
-# ==========================================
+# 运行层基于上游 Sub2API 镜像，仅补齐 Choreo 所需的 Redis、Caddy 和入口脚本。
 FROM weishaw/sub2api:latest
 
 USER root
 
 RUN apk add --no-cache \
-    redis \
-    caddy \
     ca-certificates \
+    caddy \
+    redis \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-RUN addgroup -g 10014 choreo && \
-    adduser -u 10014 -G choreo -s /bin/sh -D choreo && \
-    mkdir -p /tmp/sub2api /tmp/sub2api/pricing /tmp/redis /tmp/caddy-config /tmp/caddy-data && \
-    chown -R 10014:10014 /tmp/sub2api /tmp/redis /tmp/caddy-config /tmp/caddy-data
-    
-# ------------------------------------------------------------
-# 从第一阶段 (builder) 复制我们编译好的 komari-agent 二进制文件
-# ------------------------------------------------------------
-COPY --from=builder /src/komari-agent /app/komari-agent
+# Choreo 建议使用 10000-20000 范围内的非 root UID；所有运行时写入目录放在 /tmp。
+RUN addgroup -g 10014 choreo \
+    && adduser -u 10014 -G choreo -s /bin/sh -D choreo \
+    && mkdir -p \
+        /tmp/sub2api \
+        /tmp/sub2api/pricing \
+        /tmp/redis \
+        /tmp/caddy-config \
+        /tmp/caddy-data \
+    && chown -R 10014:10014 \
+        /tmp/sub2api \
+        /tmp/redis \
+        /tmp/caddy-config \
+        /tmp/caddy-data
 
 WORKDIR /app
 
+COPY --from=komari-agent-builder /out/komari-agent /app/komari-agent
 COPY --chmod=755 entrypoint.sh /app/entrypoint.sh
 COPY Caddyfile /app/Caddyfile
 
+# 默认值面向 Choreo：外部 PostgreSQL、内置 Redis、只写 /tmp、日志输出到 stdout。
 ENV AUTO_SETUP=true \
     SERVER_HOST=0.0.0.0 \
     SERVER_PORT=8080 \
@@ -72,6 +64,7 @@ ENV AUTO_SETUP=true \
     REDIS_PORT=6379 \
     REDIS_ENABLE_TLS=false
 
+# 8080 暴露 REST/API，8081 暴露 Choreo WS endpoint，经 Caddy 转发到 8080。
 EXPOSE 8080 8081
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=30s \

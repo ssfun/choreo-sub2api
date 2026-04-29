@@ -1,29 +1,89 @@
 # Sub2API Dockerfile for Choreo
 
-# Version
+这是面向 Choreo 平台的 [Wei-Shaw/sub2api](https://github.com/Wei-Shaw/sub2api) 适配仓库。
 
-v0.1.119
+## Version
 
-# Releases
+v0.0.0
 
-```AI API Gateway Platform - 将 AI 订阅配额分发和管理```
+## 适配内容
 
-- 邀请返利系统完善：新增返利冻结期机制、返利有效期、单人返利上限
+- 基于 `weishaw/sub2api:latest` 运行 Sub2API
+- 使用外部 PostgreSQL
+- 容器内置 Redis，并绑定 `127.0.0.1`
+- REST endpoint 使用 `8080`
+- WebSocket endpoint 使用 `8081`，由 Caddy 反向代理到 Sub2API `8080`
+- Choreo 只读文件系统下，运行时写入目录统一放到 `/tmp`
+- 可选内置 Komari agent，通过 `KOMARI_SERVER` 和 `KOMARI_SECRET` 启用
+- 提供 Cloudflare Worker，用于处理 Choreo Public URL 路径前缀和 REST/WS 分流
 
-- 邀请返利功能开关：支持管理员全局开关邀请返利功能
+## 快速开始
 
-- 专属邀请设置：支持管理员为指定用户设置专属邀请码和返利比例
+Choreo 部署说明见：
 
-- 补全 OAuth 注册路径（LinuxDo/OIDC/WeChat/Pending Flow）的邀请码绑定
+```text
+README.choreo.md
+```
 
-- 修复 Zpay 退款接口调用问题
+核心文件：
 
-- 修正缓存 token 的 Anthropic 用量语义，修复 OpenAI 兼容层缓存统计不准确
+```text
+Dockerfile
+entrypoint.sh
+Caddyfile
+.choreo/component.yaml
+worker/cloudflare-worker.js
+```
 
-- 修复真实 Claude Code 客户端被误应用 body mimicry 导致 prompt caching 失效的问题
+Choreo 构建配置：
 
-- 修复 Stripe 支付页面被前端路由守卫拦截的问题
+```text
+Build Preset: Docker
+Dockerfile Path: Dockerfile
+Component Directory: /
+```
 
-- 修复 OpenAI responses 流式请求在 pre-output failover 期间下游连接超时断开的问题
+## 最小环境变量
 
-- 收紧 OpenAI responses 流式账号测试逻辑
+```bash
+DATABASE_HOST=your-postgres-direct-host
+DATABASE_PORT=5432
+DATABASE_USER=sub2api
+DATABASE_PASSWORD=your-password
+DATABASE_DBNAME=sub2api
+DATABASE_SSLMODE=require
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me
+JWT_SECRET=change-me-to-a-long-random-secret
+TOTP_ENCRYPTION_KEY=change-me-to-a-32-byte-secret
+```
+
+推荐使用 PostgreSQL direct/session endpoint，不要使用 transaction pooler / PgBouncer transaction mode。
+
+## Cloudflare Worker
+
+部署后修改 `worker/cloudflare-worker.js` 顶部配置：
+
+```js
+const CHOREO_HOST = "xxxx-dev.e1-us-east-azure.choreoapis.dev";
+const REST_PATH_PREFIX = "/default/sub2api/v1.0";
+const WS_PATH_PREFIX = "/default/sub2api/sub2api_ws/v1.0";
+```
+
+然后将 Worker 绑定到自定义域名。
+
+## Komari agent
+
+可选启用：
+
+```bash
+KOMARI_SERVER=https://komari.example.com
+KOMARI_SECRET=your-komari-secret
+```
+
+两个变量都非空时，容器启动脚本会自动启动 `/app/komari-agent`。
+
+## Releases
+
+当前占位版本为 `v0.0.0`。`.github/workflows/update-version.yml` 会定时检查 `Wei-Shaw/sub2api` 的 latest release，并更新本节。

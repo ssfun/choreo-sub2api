@@ -1,4 +1,4 @@
-name: Auto Update LobeHub Version
+name: Auto Update Sub2API Version
 
 on:
   schedule:

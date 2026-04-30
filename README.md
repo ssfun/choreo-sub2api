@@ -2,23 +2,34 @@
 
 # Version
 
-v0.1.119
+v0.1.120
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-- 邀请返利系统完善：新增返利冻结期机制、返利有效期、单人返利上限
-- 邀请返利功能开关：支持管理员全局开关邀请返利功能
-- 专属邀请设置：支持管理员为指定用户设置专属邀请码和返利比例
-- 补全 OAuth 注册路径（LinuxDo/OIDC/WeChat/Pending Flow）的邀请码绑定
+- OpenAI Fast/Flex Policy：支持 HTTP、WebSocket 和管理后台配置
+- Vertex Service Account：支持通过服务账号方式接入 Google Vertex AI
+- 账号批量编辑：支持按筛选条件批量更新账号设置（含 compact 配置）
+- 运维清理支持 retention_days=0：允许每次调度清理时清空表数据
+- 请求体压缩解码：支持 zstd/gzip/deflate 压缩请求体自动解码
+- Vertex 用量窗口展示当日统计
 
-- 修复 Zpay 退款接口调用问题
-- 修正缓存 token 的 Anthropic 用量语义，修复 OpenAI 兼容层缓存统计不准确
-- 修复真实 Claude Code 客户端被误应用 body mimicry 导致 prompt caching 失效的问题
-- 修复 Stripe 支付页面被前端路由守卫拦截的问题
-- 修复 OpenAI responses 流式请求在 pre-output failover 期间下游连接超时断开的问题
-- 收紧 OpenAI responses 流式账号测试逻辑
+- API Key 速率限制重置时同步清除用量缓存
+- 解压缩增加 bomb guard 防护，防止恶意超大解压
+- 调度器 SetSnapshot 竞态条件修复，移除前端用量节流逻辑
+
+- 修复 OpenAI 图片请求未正确使用版本化 base URL 的问题
+- 修复 OpenAI 图片请求产生隐式粘性会话的问题
+- 修复 OpenAI /v1/responses 输入中残留 reasoning items 的问题
+- 修复 OpenAI passthrough 字段未正确清理的问题
+- 修复 OpenAI Codex compact payload 字段被意外丢弃的问题
+- 修复 OpenAI WebSocket 在显式工具重放时错误推断 continuation 的问题
+- 修复 Responses function tool_choice 格式不兼容的问题
+- 修复 Anthropic responses-to-anthropic 转换中空 Read.pages 未清理的问题
+- 修复网关流式错误泄露基础设施拓扑信息的安全问题
+- 修复 Anthropic 流式 EOF 未正确封装为 failover 错误的问题
+- 修复 Anthropic SSE 错误事件格式不符合标准的问题
 
 
 
@@ -29,10 +40,10 @@ v0.1.119
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.119
+docker pull weishaw/sub2api:0.1.120
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.119
+docker pull ghcr.io/wei-shaw/sub2api:0.1.120
 ```
 
 **One-line install (Linux):**
@@ -47,4 +58,3 @@ Download the appropriate archive for your platform from the assets below.
 
 - [GitHub Repository](https://github.com/Wei-Shaw/sub2api)
 - [Installation Guide](https://github.com/Wei-Shaw/sub2api/blob/main/deploy/README.md)
-

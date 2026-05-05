@@ -2,32 +2,23 @@
 
 # Version
 
-v0.1.122
+v0.1.123
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-提升 OpenAI 兼容上游接入稳定性，并新增管理后台邀请返利记录查看能力，便于运营侧追踪邀请、返利和余额转入历史。
-
-## 新增功能
-
-- 管理后台邀请返利记录：新增邀请、返利、转入记录页面和筛选查看能力
-- OpenAI 兼容上游适配：优化 APIKey 账户对第三方兼容服务的接入流程
-
-## 优化改进
-
-- 返利历史展示：完善返利转入余额历史显示，并支持从返利记录跳转用户
-- OpenAI 请求处理：提升图片请求、流式响应和直连转发场景的稳定性
-- OpenAI 账户批量编辑：补充 compact 相关批量编辑字段
+修复 OpenAI 兼容接口中未知模型被默认模型静默兜底的问题，请求会保留原始模型并透传上游错误。
 
 ## Bug 修复
 
-- 修复部分 OpenAI 兼容调用场景下使用记录不一致的问题
-- 修复 OpenAI WebSocket passthrough 场景的请求上下文记录问题
-- 修复部分 OpenAI 直连转发场景的参数传递和日志展示问题
-- 修复管理后台概览中的邀请返利额度统计问题
-- 修复邀请返利审计记录来源不准确的问题
+- OpenAI 模型转发：移除未知 GPT 模型自动回退到分组默认模型的逻辑，避免无效模型被错误转发为默认模型
+- 计费记录：保持渠道未映射请求按实际上游计费模型记录，避免计费模型被原始请求模型覆盖
+
+## 优化改进
+
+- 模型支持：补充 gpt-5.4-nano 本地兜底计费价格
+- 测试覆盖：增加未知模型不兜底、OAuth 透传和模型归一化相关用例
 
 
 
@@ -38,10 +29,10 @@ v0.1.122
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.122
+docker pull weishaw/sub2api:0.1.123
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.122
+docker pull ghcr.io/wei-shaw/sub2api:0.1.123
 ```
 
 **One-line install (Linux):**

@@ -2,23 +2,23 @@
 
 # Version
 
-v0.1.123
+v0.1.125
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-修复 OpenAI 兼容接口中未知模型被默认模型静默兜底的问题，请求会保留原始模型并透传上游错误。
+- 登录注册条款确认：登录和注册流程支持展示并确认服务条款与隐私协议
+- 法律文档页面：新增公开法律文档页面，并支持后台配置相关内容
 
-## Bug 修复
+- 账号模型白名单：更新内容审核和前端模型白名单配置
+- 风险控制界面：优化 Moderation Key 相关交互和中英文文案
+- CI 稳定性：修复 API 契约测试和设置服务相关 lint/test 问题
 
-- OpenAI 模型转发：移除未知 GPT 模型自动回退到分组默认模型的逻辑，避免无效模型被错误转发为默认模型
-- 计费记录：保持渠道未映射请求按实际上游计费模型记录，避免计费模型被原始请求模型覆盖
+- 修复 Moderation Key 处理逻辑和密钥界面问题
+- 修复网关默认注入 redact-thinking beta 参数的问题
 
-## 优化改进
-
-- 模型支持：补充 gpt-5.4-nano 本地兜底计费价格
-- 测试覆盖：增加未知模型不兜底、OAuth 透传和模型归一化相关用例
+无需额外操作。
 
 
 
@@ -29,10 +29,10 @@ v0.1.123
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.123
+docker pull weishaw/sub2api:0.1.125
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.123
+docker pull ghcr.io/wei-shaw/sub2api:0.1.125
 ```
 
 **One-line install (Linux):**
@@ -47,3 +47,4 @@ Download the appropriate archive for your platform from the assets below.
 
 - [GitHub Repository](https://github.com/Wei-Shaw/sub2api)
 - [Installation Guide](https://github.com/Wei-Shaw/sub2api/blob/main/deploy/README.md)
+

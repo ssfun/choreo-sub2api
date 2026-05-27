@@ -2,39 +2,26 @@
 
 # Version
 
-v0.1.130
+v0.1.131
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-- 内容审计支持按模型生效，可针对不同模型配置审计策略
-- 注册邮箱白名单支持后缀通配符匹配
-- 账号测试连接支持 Chat Completions 路径
-- 新增订阅到期邮件提醒开关
-- OIDC 登录在上游邮箱已验证时跳过选择页，直接登录/注册
-- AWS Bedrock 账号增加 Claude Code 兼容性转换
-- 兑换码支持批量更新
-- API Key ACL 新增反代真实 IP 开关
+- 用户平台配额：支持为用户在 anthropic/openai/gemini/antigravity 四个平台分别设置日/周/月 USD 配额，未设置=不限制、0=禁用、>0=美元上限
+- 配额默认值配置：系统默认 + email/linuxdo/oidc/wechat/github/google/dingtalk 七种鉴权来源各自的默认配额，可在管理端设置页统一编辑
+- 用户端配额展示：用户 Dashboard 显示各平台已用/剩余配额
+- 内容审计风险阈值：内容审计支持自定义风险阈值配置
 
-- Cache Hit Rate 统计口径修正为包含全部 prompt tokens
-- OpenAI 账号冷却调度逻辑优化
-- 渠道监控兼容 Responses reasoning 输出
-- 异常账号自动从调度中移除
-- 删除账号时同步清理调度器缓存
-- 升级 x/net 修复安全漏洞
-- 升级 js-cookie 修复安全审计
+- HTTP/2 上游传输：完善 OpenAI 上游 HTTP/2 配置项，新增响应头超时及相关连接参数控制
+- 流错误处理：/v1/responses、/responses、/backend-api/codex/responses 等 6 个路由统一识别并按 Responses 协议下发 response.failed 终止事件
+- response.failed SSE writer 改用 json.Marshal 输出，避免 strconv.Quote 产生非法 JSON 转义
 
-- 修复反代部署下拒绝日志客户端 IP 不准确的问题
-- 修复 Agent 工具循环中同一用户消息被重复审计的问题
-- 修复 API 兼容层 developer 角色未映射为 system 的问题
-- 修复 OIDC verified-email 快速路径的安全加固
-- 修复用户 Provider 默认授权未包含 github/google/dingtalk 的问题
-- 修复本地客户端限制错误被错误计入 SLA 的问题
-- 修复 upstream "thinking block must contain thinking" 错误未自动重试的问题
-- 修复复用的 refresh token 被错误重试的问题
-- 修复 OpenAI 图片审核错误未正确透传的问题
-- 修复邮箱白名单占位符中 @ 符号未转义的 i18n 问题
+- 修复 OpenAI HTTP/2 上游响应头超时无法配置、长响应被中断的问题
+- 修复 /v1/responses 流式场景下并发等待超时只发 event: error 导致 Codex CLI 报 "stream closed before response.completed" 的问题
+- 修复 SSE 已写入心跳后再发生上游错误（http2 超时、stream INTERNAL_ERROR 等）时静默 EOF 的问题
+- 修复 handleStreamingAwareError 仅匹配 /v1/responses、漏掉裸 /responses 与 /backend-api/codex/responses 的问题
+- 修复 WebSocket 续接时未识别 Codex 工具输出的问题
 
 
 
@@ -45,10 +32,10 @@ v0.1.130
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.130
+docker pull weishaw/sub2api:0.1.131
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.130
+docker pull ghcr.io/wei-shaw/sub2api:0.1.131
 ```
 
 **One-line install (Linux):**

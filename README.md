@@ -2,26 +2,37 @@
 
 # Version
 
-v0.1.131
+v0.1.132
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-- 用户平台配额：支持为用户在 anthropic/openai/gemini/antigravity 四个平台分别设置日/周/月 USD 配额，未设置=不限制、0=禁用、>0=美元上限
-- 配额默认值配置：系统默认 + email/linuxdo/oidc/wechat/github/google/dingtalk 七种鉴权来源各自的默认配额，可在管理端设置页统一编辑
-- 用户端配额展示：用户 Dashboard 显示各平台已用/剩余配额
-- 内容审计风险阈值：内容审计支持自定义风险阈值配置
+新增分组自定义 `/v1/models` 模型列表和账号池模式可配置同账号重试状态码，并修复长上下文缓存计费、OpenAI WS 限额切换、账号重新授权等问题。
 
-- HTTP/2 上游传输：完善 OpenAI 上游 HTTP/2 配置项，新增响应头超时及相关连接参数控制
-- 流错误处理：/v1/responses、/responses、/backend-api/codex/responses 等 6 个路由统一识别并按 Responses 协议下发 response.failed 终止事件
-- response.failed SSE writer 改用 json.Marshal 输出，避免 strconv.Quote 产生非法 JSON 转义
+## 新增功能
 
-- 修复 OpenAI HTTP/2 上游响应头超时无法配置、长响应被中断的问题
-- 修复 /v1/responses 流式场景下并发等待超时只发 event: error 导致 Codex CLI 报 "stream closed before response.completed" 的问题
-- 修复 SSE 已写入心跳后再发生上游错误（http2 超时、stream INTERNAL_ERROR 等）时静默 EOF 的问题
-- 修复 handleStreamingAwareError 仅匹配 /v1/responses、漏掉裸 /responses 与 /backend-api/codex/responses 的问题
-- 修复 WebSocket 续接时未识别 Codex 工具输出的问题
+- 分组模型列表：支持为分组自定义 `/v1/models` 返回的模型列表，并补充管理端配置入口
+- 账号池重试状态码：支持为账号池模式配置同账号重试的上游 HTTP 状态码
+- 运维指标：新增本地业务限制原因，用于区分平台策略限制和上游异常
+- 账号管理：账号列表新增创建时间列
+
+## 优化改进
+
+- OpenAI 使用密钥：更新 OpenAI 使用密钥配置展示
+- CI：重新触发因 GitHub Actions codeload 临时故障失败的流程
+
+## Bug 修复
+
+- API Key Responses：修复 API Key 响应在特定场景下回退读取 SSE body 的问题
+- 计费：修复长上下文场景下 cache_read 和 cache_creation 价格未应用倍率的问题
+- Antigravity：修复流式透传时未记录 message_start 中 input_tokens 的问题
+- OpenAI：修复 Chat Responses usage 计费信息未保留的问题
+- 调度器：修复模型 404 时错误冷却整个账号的问题，改为仅冷却账号-模型组合
+- OpenAI WS：修复遇到限额时未自动切换账号的问题
+- 账号重新授权：修复重新授权会清空 Extra 配置并可能继续使用旧 token 的问题
+- Ops SLA：修复本地策略限制被计入错误统计的问题
+- Bedrock：修复 beta token 被移除时未同步剥离 context_management 字段的问题
 
 
 
@@ -32,10 +43,10 @@ v0.1.131
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.131
+docker pull weishaw/sub2api:0.1.132
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.131
+docker pull ghcr.io/wei-shaw/sub2api:0.1.132
 ```
 
 **One-line install (Linux):**

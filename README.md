@@ -2,37 +2,42 @@
 
 # Version
 
-v0.1.132
+v0.1.133
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增分组自定义 `/v1/models` 模型列表和账号池模式可配置同账号重试状态码，并修复长上下文缓存计费、OpenAI WS 限额切换、账号重新授权等问题。
+本版本新增 OpenAI embeddings 网关、账号用量阈值自动暂停和前置拦截风控运行态，更新模型定价元数据，并集中修复多项网关兼容性、用量统计和账号调度问题。
 
 ## 新增功能
 
-- 分组模型列表：支持为分组自定义 `/v1/models` 返回的模型列表，并补充管理端配置入口
-- 账号池重试状态码：支持为账号池模式配置同账号重试的上游 HTTP 状态码
-- 运维指标：新增本地业务限制原因，用于区分平台策略限制和上游异常
-- 账号管理：账号列表新增创建时间列
+- OpenAI embeddings 网关：新增 embeddings 请求入口和转发支持
+- 账号配额保护：支持按 5h/7d 用量阈值自动暂停账号调度，并支持全局默认与单账号禁用
+- 风控运行态：完善前置拦截模式的审核记录和运行态展示
+- 模型适配：新增 claude-opus-4-8 支持
+- Codex 客户端限制：codex_cli_only 支持放行 Claude Code Codex 插件
 
 ## 优化改进
 
-- OpenAI 使用密钥：更新 OpenAI 使用密钥配置展示
-- CI：重新触发因 GitHub Actions codeload 临时故障失败的流程
+- 模型定价：更新模型价格和上下文窗口元数据，新增 Claude Opus 4.7/4.8、GPT 5.4/5.5、Gemini 3.x 等模型条目，并移除部分旧预览或过期模型
+- 请求追踪：保留 usage 请求上下文，改善用量记录关联
+- OpenAI 账号配置：优化端点能力配置界面的说明和校验
+- 测试稳定性：修复内容审计日志异步断言
 
 ## Bug 修复
 
-- API Key Responses：修复 API Key 响应在特定场景下回退读取 SSE body 的问题
-- 计费：修复长上下文场景下 cache_read 和 cache_creation 价格未应用倍率的问题
-- Antigravity：修复流式透传时未记录 message_start 中 input_tokens 的问题
-- OpenAI：修复 Chat Responses usage 计费信息未保留的问题
-- 调度器：修复模型 404 时错误冷却整个账号的问题，改为仅冷却账号-模型组合
-- OpenAI WS：修复遇到限额时未自动切换账号的问题
-- 账号重新授权：修复重新授权会清空 Extra 配置并可能继续使用旧 token 的问题
-- Ops SLA：修复本地策略限制被计入错误统计的问题
-- Bedrock：修复 beta token 被移除时未同步剥离 context_management 字段的问题
+- 修复 Gemini Messages 流式响应中 tool_use 后接 text 时内容块未正确关闭的问题
+- 修复 OpenAI 路由未按账号端点能力正确拦截的问题
+- 修复 OAuth 401 处理可能用旧快照覆盖 credentials JSONB 的问题
+- 修复系统更新已是最新版本时返回 500 的问题，改为返回 already_up_to_date
+- 修复并发获取失败的错误分类，避免返回不准确的错误响应
+- 修复 count_tokens 请求透传 generation-only 字段导致上游 400 的问题
+- 修复 OpenAI WS 兼容性和 usage 统计，补齐终态事件、模型省略和图片 usage 映射
+- 修复 WS 首 token 指标把终态事件误判为 token 事件的问题
+- 修复 Responses 转 Chat 时 completion_tokens_details 透传不完整的问题
+- 修复 Anthropic 转 Responses 时 input_tokens 未按 OpenAI 语义计入缓存 token 的问题
+- 修复 body.context_management 与最终 anthropic-beta header 能力不匹配导致上游拒收的问题
 
 
 
@@ -43,10 +48,10 @@ v0.1.132
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.132
+docker pull weishaw/sub2api:0.1.133
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.132
+docker pull ghcr.io/wei-shaw/sub2api:0.1.133
 ```
 
 **One-line install (Linux):**

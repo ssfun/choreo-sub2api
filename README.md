@@ -2,42 +2,46 @@
 
 # Version
 
-v0.1.133
+v0.1.134
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-本版本新增 OpenAI embeddings 网关、账号用量阈值自动暂停和前置拦截风控运行态，更新模型定价元数据，并集中修复多项网关兼容性、用量统计和账号调度问题。
+- Codex/Claude Code 模拟增强：对齐 Claude Code 指纹至 CLI 2.1.161，新增模型感知的 Codex prompt / client_metadata / anthropic SSE 补全
+- 失败请求追踪：用户端与管理端均可记录并查看失败请求，错误日志补充 key 归因与早退字段
+- 管理端用量增强：/admin/usage 支持查看已删除用户的历史用量，账号用量窗口（5h/7d）新增说明 tooltip
+- 添加账号时支持同步上游模型列表
+- 新增 codex-auto-review 默认模型
+- 图像 token 计费支持，渠道定价可完全覆盖图像输出 token 价格
+- 用户×平台配额：DB 写聚合 flusher 与 sentinel 回填，消除无配额用户每请求回源 DB
 
-## 新增功能
+- 重新设计 Codex Responses ↔ Chat Completions 桥接，提升兼容性与稳定性
+- 网关请求体处理优化：延迟解码、引用化请求体、减少内存拷贝，降低 OpenAI 大请求内存占用
+- /admin/usage 打开速度与刷新响应优化
+- 多实例部署：周期性后台任务通过 leader lock 仅在主节点执行
+- 运维监控 TTFT（首 token 延迟）按流式样本数加权统计
+- OpenAI 图像限流按能力维度冷却并故障转移
+- 兼容 Redis 3.2–4.x（使用 TIME 的 Lua 脚本）
+- 数据库连接池强制连接生命周期下限
 
-- OpenAI embeddings 网关：新增 embeddings 请求入口和转发支持
-- 账号配额保护：支持按 5h/7d 用量阈值自动暂停账号调度，并支持全局默认与单账号禁用
-- 风控运行态：完善前置拦截模式的审核记录和运行态展示
-- 模型适配：新增 claude-opus-4-8 支持
-- Codex 客户端限制：codex_cli_only 支持放行 Claude Code Codex 插件
-
-## 优化改进
-
-- 模型定价：更新模型价格和上下文窗口元数据，新增 Claude Opus 4.7/4.8、GPT 5.4/5.5、Gemini 3.x 等模型条目，并移除部分旧预览或过期模型
-- 请求追踪：保留 usage 请求上下文，改善用量记录关联
-- OpenAI 账号配置：优化端点能力配置界面的说明和校验
-- 测试稳定性：修复内容审计日志异步断言
-
-## Bug 修复
-
-- 修复 Gemini Messages 流式响应中 tool_use 后接 text 时内容块未正确关闭的问题
-- 修复 OpenAI 路由未按账号端点能力正确拦截的问题
-- 修复 OAuth 401 处理可能用旧快照覆盖 credentials JSONB 的问题
-- 修复系统更新已是最新版本时返回 500 的问题，改为返回 already_up_to_date
-- 修复并发获取失败的错误分类，避免返回不准确的错误响应
-- 修复 count_tokens 请求透传 generation-only 字段导致上游 400 的问题
-- 修复 OpenAI WS 兼容性和 usage 统计，补齐终态事件、模型省略和图片 usage 映射
-- 修复 WS 首 token 指标把终态事件误判为 token 事件的问题
-- 修复 Responses 转 Chat 时 completion_tokens_details 透传不完整的问题
-- 修复 Anthropic 转 Responses 时 input_tokens 未按 OpenAI 语义计入缓存 token 的问题
-- 修复 body.context_management 与最终 anthropic-beta header 能力不匹配导致上游拒收的问题
+- 修复 Linux DO 登录误进入邮箱验证流程
+- 修复删除用户时未一并删除其 API Key、未复用调用方事务的问题
+- 修复 PostgreSQL 初始化连接使用维护库、DSN dbname 解析问题
+- 修复流式异常：缺失终止事件、reasoning-only 回复、tool_use/tool_result 配对、终止输出规范化
+- 修复 DeepSeek reasoning-only 回复无法透传
+- 修复图像上游错误被吞为通用 502，改为透传真实错误
+- 修复 OpenAI failover 复用过期缓存请求体、WebSocket 用量去重冲突、超大 WS 请求桥接
+- 修复 Codex 5h 用量百分比快照自愈与重置窗口对齐
+- 修复账号编辑时固定配额窗口未归一化
+- 修复 OpenAI OAuth token 刷新信息补全
+- 修复 EasyPay 订单查询改用 trade_status
+- 修复调度器粘性会话健康逃逸、账号状态变更后快照同步
+- 修复管理员清空分组描述未持久化
+- 修复内容审核自动封禁误伤管理员账号
+- 安全修复：未授权 Key 访问返回 404 而非 403 防 ID 探测（CWE-204）、API Key 名称转义防存储型 XSS（CWE-79）
+- 修复 antigravity gemini 限流与账号调度
+- 修复计费 balance 字段指针类型、前端用量页 image_output_tokens 明细展示、可空字段渲染崩溃致整表空白
 
 
 
@@ -48,10 +52,10 @@ v0.1.133
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.133
+docker pull weishaw/sub2api:0.1.134
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.133
+docker pull ghcr.io/wei-shaw/sub2api:0.1.134
 ```
 
 **One-line install (Linux):**

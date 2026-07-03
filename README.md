@@ -2,27 +2,41 @@
 
 # Version
 
-v0.1.142
+v0.1.143
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-- OpenAI Spark 影子账号：链接型影子账号（parent_account_id）复用母账号凭据/代理，独立走 spark 配额维度与用量窗口，一母一影强约束、母账号 429 与影子互不连坐
-- 适配 Claude Sonnet 5：模型白名单与 dateline 归一化路径打通
-- 抹除 Anthropic OAuth 请求中客户端 dateline 隐写指纹：对 /v1/messages 的 OAuth/setup-token 账号请求做 dateline 归一化，抹除撇号 / 日期分隔符隐写位；默认开启，可在系统设置切换
-- Grok 媒体（图像）路由：识别官方 grok 媒体模型 ID、路由 grok media 端点，并支持图像编辑上传转换
+订阅分组新增高峰时段倍率能力；OpenAI WebSocket 新增 http_bridge ingress 模式。
 
-- 用户使用记录列表默认显示“推理强度”列
-- OpenAI 默认模型列表移除 gpt-5.3-codex（保留 gpt-5.3-codex-spark 计费/别名逻辑）
-- 前端 Grok 图标、配色与国际化文案打磨
-- 国际化：清理残留英文兜底、修复中文文案在清理中丢失、渠道间隔校验强制走本地化路径、多处 UI 字符串补齐 en/zh 翻译
+## 新增功能
 
-- 修复账号列表分页 total 与实际条目数不一致（Ent query builder 在 Count 与 All 之间复用导致 SoftDeleteMixin 谓词累积）
-- 修复订阅撤销后软删除失效：新增撤销接口、同步失效 L1 与 billing 缓存，跨实例广播失效、列表查询感知软删除，DTO 增加 revoked_at
-- 修复 Codex OAuth 路径下跨轮次加密推理内容被丢弃（store=false 时应去掉 rs_* id，而非删除整个 reasoning item）
-- 修复 GPT-5.5 Pro Codex 模型名被 Codex OAuth 归一化降级为 gpt-5.5，补齐计费回退与长上下文策略
-- 允许五平台（含 Grok）配额更新
+- 订阅分组高峰时段倍率：支持为分组配置高峰时段与倍率，倍率信息全链路透传至可用渠道、支付计划与结算信息
+- OpenAI WebSocket 新增 http_bridge ingress 模式及账号级 WS 选择器
+- 支持恢复已撤销的订阅
+- 用量记录新增 IP 地理位置查询与展示
+- 管理端分组列表支持自定义列显示设置
+- OpenAI 账号显示额度重置到期时间
+- Anthropic 渠道支持 API Key Bearer 认证方式
+
+## 优化改进
+
+- 计费术语修正：「文本倍率」调整为「token 倍率」，明确高峰倍率同时作用于 token 计费的图片 token，图片按次计费不受高峰影响
+- 高峰时段窗口按服务器时区展示并标注 UTC 偏移，避免误读为浏览器本地时间
+- 切换分组类型为标准分组时自动清除高峰倍率配置
+
+## Bug 修复
+
+- 修复 Claude Code 流式响应 keepalive 卡顿问题
+- 修复 OpenAI OAuth count_tokens scope 错误处理
+- 修复 Codex 图片桥接注入导致 /responses/compact 请求失败的问题
+- 修复 Gemini 推理模型（antigravity）无效参数处理
+- 修复用户模型统计未按请求模型聚合的问题
+- 修复 Claude OAuth token 交换 payload（移除多余的 expires_in）
+- 修复 OpenAI 订阅到期时间未持久化的问题
+- 修复非活跃工作区覆盖 OpenAI plan type 的问题
+- 修复 Grok 媒体生成分组默认启用与图片别名归一化
 
 
 
@@ -33,10 +47,10 @@ v0.1.142
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.142
+docker pull weishaw/sub2api:0.1.143
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.142
+docker pull ghcr.io/wei-shaw/sub2api:0.1.143
 ```
 
 **One-line install (Linux):**

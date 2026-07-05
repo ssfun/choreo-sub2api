@@ -2,41 +2,37 @@
 
 # Version
 
-v0.1.143
+v0.1.144
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-订阅分组新增高峰时段倍率能力；OpenAI WebSocket 新增 http_bridge ingress 模式。
+修复高并发下用量日志静默丢失导致的对账缺口问题；新增 Anthropic Fable 专属 7d_oi 窗口的模型级限流支持，触发限流不再误伤整个账号。
 
 ## 新增功能
 
-- 订阅分组高峰时段倍率：支持为分组配置高峰时段与倍率，倍率信息全链路透传至可用渠道、支付计划与结算信息
-- OpenAI WebSocket 新增 http_bridge ingress 模式及账号级 WS 选择器
-- 支持恢复已撤销的订阅
-- 用量记录新增 IP 地理位置查询与展示
-- 管理端分组列表支持自定义列显示设置
-- OpenAI 账号显示额度重置到期时间
-- Anthropic 渠道支持 API Key Bearer 认证方式
+- Anthropic 账号支持 Fable 专属 7d_oi 限流窗口：仅该窗口触发 429 时按模型级限流处理（其他模型正常调度），账号列表新增 "7d F" 用量进度条
+- 错误请求列表全面对齐用量明细：支持排序、筛选、列设置，新增分类过滤（管理端与用户端）
+- Codex 图像工具策略：账号级四态控制（跟随渠道/强制注入/不注入/全部拦截），支持剥离图像生成工具
+- 数据库迁移超时时间支持配置
 
 ## 优化改进
 
-- 计费术语修正：「文本倍率」调整为「token 倍率」，明确高峰倍率同时作用于 token 计费的图片 token，图片按次计费不受高峰影响
-- 高峰时段窗口按服务器时区展示并标注 UTC 偏移，避免误读为浏览器本地时间
-- 切换分组类型为标准分组时自动清除高峰倍率配置
+- 优化并发槽位清理逻辑
+- 优化 Ops 实时账户统计查询性能
+- 分组容量统计改为批量查询，降低热点路径数据库压力
 
 ## Bug 修复
 
-- 修复 Claude Code 流式响应 keepalive 卡顿问题
-- 修复 OpenAI OAuth count_tokens scope 错误处理
-- 修复 Codex 图片桥接注入导致 /responses/compact 请求失败的问题
-- 修复 Gemini 推理模型（antigravity）无效参数处理
-- 修复用户模型统计未按请求模型聚合的问题
-- 修复 Claude OAuth token 交换 payload（移除多余的 expires_in）
-- 修复 OpenAI 订阅到期时间未持久化的问题
-- 修复非活跃工作区覆盖 OpenAI plan type 的问题
-- 修复 Grok 媒体生成分组默认启用与图片别名归一化
+- 修复高并发下用量日志被队列溢出静默丢弃的问题，改为背压等待与同步兜底，确保计费记录不丢失
+- 修复 Codex 会话导入时同团队成员账号互相覆盖的问题，改为按 chatgpt_user_id 优先匹配
+- 修复 OpenAI Responses 计费未使用映射后模型的问题
+- 修复 Antigravity Gemini 3.1 Pro 路由不规范的问题
+- 修复 Antigravity OAuth 401 后无法自动恢复的问题
+- 修复 token_expired 刷新错误被无效重试的问题
+- 修复 Grok OAuth 模型映射无法编辑、已配置并发数被覆盖的问题
+- 修复邀请码普通兑换报错的问题
 
 
 
@@ -47,10 +43,10 @@ v0.1.143
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.143
+docker pull weishaw/sub2api:0.1.144
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.143
+docker pull ghcr.io/wei-shaw/sub2api:0.1.144
 ```
 
 **One-line install (Linux):**

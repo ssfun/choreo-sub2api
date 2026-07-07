@@ -2,37 +2,34 @@
 
 # Version
 
-v0.1.144
+v0.1.145
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-修复高并发下用量日志静默丢失导致的对账缺口问题；新增 Anthropic Fable 专属 7d_oi 窗口的模型级限流支持，触发限流不再误伤整个账号。
+新增 EasyPay 自定义支付方式与 OpenAI 高级调度器控制；订阅 CNY 换算改为独立汇率的显式 opt-in 配置。
 
 ## 新增功能
 
-- Anthropic 账号支持 Fable 专属 7d_oi 限流窗口：仅该窗口触发 429 时按模型级限流处理（其他模型正常调度），账号列表新增 "7d F" 用量进度条
-- 错误请求列表全面对齐用量明细：支持排序、筛选、列设置，新增分类过滤（管理端与用户端）
-- Codex 图像工具策略：账号级四态控制（跟随渠道/强制注入/不注入/全部拦截），支持剥离图像生成工具
-- 数据库迁移超时时间支持配置
+- EasyPay 自定义支付方式：支持在内置方式之外配置自定义可见支付方式
+- OpenAI 高级调度器控制：新增粘性加权、TopK/权重覆盖等高级调度配置项
+- 订阅 CNY 换算：新增 SUBSCRIPTION_USD_TO_CNY_RATE 独立汇率配置（默认关闭），使促销倍率与订阅定价解耦
+- 点击侧边栏 Logo/站点名可返回首页
 
 ## 优化改进
 
-- 优化并发槽位清理逻辑
-- 优化 Ops 实时账户统计查询性能
-- 分组容量统计改为批量查询，降低热点路径数据库压力
+- 用量页费用明细提示措辞由"成本"统一为面向用户的"费用"
+- 订阅撤销提示文案更新，明确说明可恢复选项
+- 统一 Docker 部署 URL 安全默认值为开发友好模式（生产环境需显式收紧）
 
 ## Bug 修复
 
-- 修复高并发下用量日志被队列溢出静默丢弃的问题，改为背压等待与同步兜底，确保计费记录不丢失
-- 修复 Codex 会话导入时同团队成员账号互相覆盖的问题，改为按 chatgpt_user_id 优先匹配
-- 修复 OpenAI Responses 计费未使用映射后模型的问题
-- 修复 Antigravity Gemini 3.1 Pro 路由不规范的问题
-- 修复 Antigravity OAuth 401 后无法自动恢复的问题
-- 修复 token_expired 刷新错误被无效重试的问题
-- 修复 Grok OAuth 模型映射无法编辑、已配置并发数被覆盖的问题
-- 修复邀请码普通兑换报错的问题
+- Anthropic /v1/models 返回分组配置的自定义模型列表
+- Antigravity 401 服务端失效 token 触发主动刷新，修复仅看 expires_at 的刷新死循环
+- 支付响应清理 NUL 字节，避免异常
+- 用量 CSV 导出补 UTF-8 BOM，修复 Excel 打开中文列乱码
+- 修复 OpenAI 高级调度器审计发现的正确性与性能问题（跨分组账号泄漏、全表扫描/Redis N+1、订阅池回退等）
 
 
 
@@ -43,10 +40,10 @@ v0.1.144
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.144
+docker pull weishaw/sub2api:0.1.145
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.144
+docker pull ghcr.io/wei-shaw/sub2api:0.1.145
 ```
 
 **One-line install (Linux):**

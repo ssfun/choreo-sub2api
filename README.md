@@ -2,34 +2,25 @@
 
 # Version
 
-v0.1.145
+v0.1.146
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 EasyPay 自定义支付方式与 OpenAI 高级调度器控制；订阅 CNY 换算改为独立汇率的显式 opt-in 配置。
+- API Key 并发统计：密钥列表实时展示并发使用情况
+- 账号请求头覆写：API Key 类型账号支持自定义 Anthropic/OpenAI 请求头（含敏感头禁止覆写防护）
+- 账号数据导入：支持拖拽上传和批量导入账号数据
+- 适配 OpenAI 新模型 gpt-5.6-sol/terra/luna，开放 Grok 图像生成计价配置
+- 订阅套餐编辑器支持预览人民币扣费金额
+- 管理端账号测试弹窗新增 compact 探测模式
 
-## 新增功能
+- 优化 Redis SCAN 清理架构，采用索引驱动清理并加固边界场景
+- Codex 版本门拒绝请求时返回带版本号的差异化提示文案
 
-- EasyPay 自定义支付方式：支持在内置方式之外配置自定义可见支付方式
-- OpenAI 高级调度器控制：新增粘性加权、TopK/权重覆盖等高级调度配置项
-- 订阅 CNY 换算：新增 SUBSCRIPTION_USD_TO_CNY_RATE 独立汇率配置（默认关闭），使促销倍率与订阅定价解耦
-- 点击侧边栏 Logo/站点名可返回首页
-
-## 优化改进
-
-- 用量页费用明细提示措辞由"成本"统一为面向用户的"费用"
-- 订阅撤销提示文案更新，明确说明可恢复选项
-- 统一 Docker 部署 URL 安全默认值为开发友好模式（生产环境需显式收紧）
-
-## Bug 修复
-
-- Anthropic /v1/models 返回分组配置的自定义模型列表
-- Antigravity 401 服务端失效 token 触发主动刷新，修复仅看 expires_at 的刷新死循环
-- 支付响应清理 NUL 字节，避免异常
-- 用量 CSV 导出补 UTF-8 BOM，修复 Excel 打开中文列乱码
-- 修复 OpenAI 高级调度器审计发现的正确性与性能问题（跨分组账号泄漏、全表扫描/Redis N+1、订阅池回退等）
+- 修复 OAuth 账号测试缺失 Codex CLI 请求头、未使用自定义 User-Agent 的问题
+- 修复 responses compact 入站端点归一化问题，用量统计口径更准确
+- 修复 base_url 非 /v1 前缀时同步 OpenAI 模型列表失败的问题
 
 
 
@@ -40,10 +31,10 @@ v0.1.145
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.145
+docker pull weishaw/sub2api:0.1.146
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.145
+docker pull ghcr.io/wei-shaw/sub2api:0.1.146
 ```
 
 **One-line install (Linux):**

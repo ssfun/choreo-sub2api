@@ -2,25 +2,25 @@
 
 # Version
 
-v0.1.146
+v0.1.149
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-- API Key 并发统计：密钥列表实时展示并发使用情况
-- 账号请求头覆写：API Key 类型账号支持自定义 Anthropic/OpenAI 请求头（含敏感头禁止覆写防护）
-- 账号数据导入：支持拖拽上传和批量导入账号数据
-- 适配 OpenAI 新模型 gpt-5.6-sol/terra/luna，开放 Grok 图像生成计价配置
-- 订阅套餐编辑器支持预览人民币扣费金额
-- 管理端账号测试弹窗新增 compact 探测模式
+- 版本回退：版本徽章新增近 3 个历史正式版本的在线一键回退（release 构建），并提供脚本部署/Docker 部署的手动回退指引
+- 用户角色管理：管理员创建/编辑用户时可设置角色（user/admin），内置"最后一个管理员不可降级"守卫并记录审计日志
+- 用户 Token 排行：用量记录页新增用户 Token 排行，支持点击下钻到该用户的用量明细
 
-- 优化 Redis SCAN 清理架构，采用索引驱动清理并加固边界场景
-- Codex 版本门拒绝请求时返回带版本号的差异化提示文案
+- 用量页布局重构：明细区整合为单卡片三个 tab（用量明细/错误请求/用户排行）
+- 新增延迟健康列：首字/总耗时合并展示并按阈值分档配色，管理端与用户端用量页共用
+- 时长格式优化：超过 1 分钟显示为 Xm Ys、超过 1 小时显示为 Xh Ym
 
-- 修复 OAuth 账号测试缺失 Codex CLI 请求头、未使用自定义 User-Agent 的问题
-- 修复 responses compact 入站端点归一化问题，用量统计口径更准确
-- 修复 base_url 非 /v1 前缀时同步 OpenAI 模型列表失败的问题
+- 修复 Codex compact 流式请求收到 JSON 响应导致无限重连、重复消耗上游配额的问题，现正确合成为 Responses SSE 协议返回
+- 修复 OpenAI /responses SSE 流的 response.failed 事件不应用错误透传规则、硬编码返回 502 的问题
+- 修复 CC/Messages 协议转换路径按错误码配置的透传规则恒不命中的问题，并按账号平台正确匹配规则
+- 修复 Grok 配额探测模型不稳定的问题
+- 修复 Grok OAuth 授权、图像生成与用量展示流程中的多个问题
 
 
 
@@ -31,10 +31,10 @@ v0.1.146
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.146
+docker pull weishaw/sub2api:0.1.149
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.146
+docker pull ghcr.io/wei-shaw/sub2api:0.1.149
 ```
 
 **One-line install (Linux):**

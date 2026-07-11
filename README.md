@@ -2,25 +2,19 @@
 
 # Version
 
-v0.1.149
+v0.1.151
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-- 版本回退：版本徽章新增近 3 个历史正式版本的在线一键回退（release 构建），并提供脚本部署/Docker 部署的手动回退指引
-- 用户角色管理：管理员创建/编辑用户时可设置角色（user/admin），内置"最后一个管理员不可降级"守卫并记录审计日志
-- 用户 Token 排行：用量记录页新增用户 Token 排行，支持点击下钻到该用户的用量明细
+- OpenAI Fast/Flex 策略支持用户级规则：规则可指定生效用户，用户专属规则优先于全局规则，便于为特定用户配置例外
 
-- 用量页布局重构：明细区整合为单卡片三个 tab（用量明细/错误请求/用户排行）
-- 新增延迟健康列：首字/总耗时合并展示并按阈值分档配色，管理端与用户端用量页共用
-- 时长格式优化：超过 1 分钟显示为 Xm Ys、超过 1 小时显示为 Xh Ym
-
-- 修复 Codex compact 流式请求收到 JSON 响应导致无限重连、重复消耗上游配额的问题，现正确合成为 Responses SSE 协议返回
-- 修复 OpenAI /responses SSE 流的 response.failed 事件不应用错误透传规则、硬编码返回 502 的问题
-- 修复 CC/Messages 协议转换路径按错误码配置的透传规则恒不命中的问题，并按账号平台正确匹配规则
-- 修复 Grok 配额探测模型不稳定的问题
-- 修复 Grok OAuth 授权、图像生成与用量展示流程中的多个问题
+- 修复 Codex 上游 originator 与 User-Agent 错配导致请求 404 的问题，覆盖普通转发、透传、WebSocket、用量探针与账号测试等路径
+- 修复 GPT-5.6 计费与用量统计问题：补齐价格识别与模型别名匹配，完善用量统计口径
+- 修复 Grok Responses 接口丢失 reasoning effort 参数的问题，兼容的参数将被保留
+- 修复 Codex 图像生成时 image_gen 命名空间声明未正确剥离的问题
+- 修复 setup-token 账号未纳入后台自动刷新、令牌到期后请求返回 401 的问题
 
 
 
@@ -31,10 +25,10 @@ v0.1.149
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.149
+docker pull weishaw/sub2api:0.1.151
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.149
+docker pull ghcr.io/wei-shaw/sub2api:0.1.151
 ```
 
 **One-line install (Linux):**

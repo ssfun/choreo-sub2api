@@ -2,36 +2,24 @@
 
 # Version
 
-v0.1.158
+v0.1.160
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-Grok 上游端点管理全面升级：支持官方 API / 区域端点手动切换与快捷填充，并修复多项 OAuth 路由回归；管理端新增用户限额批量修改与分组一键复制。
+新增独立的提示词安全审计引擎：通过 OpenAI 兼容审计节点对用户提示词进行风险扫描，配套完整的管理端审计控制台；修复 Grok 媒体生成的多个可用性问题。
 
 ## 新增功能
 
-- 用户限额批量修改：管理端用户列表支持批量设置并发数与 RPM 限制，可按勾选用户或全部用户生效
-- 分组一键复制：服务端复制分组的计价、模型路由与账号绑定（含优先级），副本默认停用待人工确认后启用
-- Grok 快捷端点：账号新增/编辑/批量编辑提供 Grok Build CLI、官方 API 及 us-east-1 / us-west-2 / eu-west-1 区域端点一键填充，输入框仍可自由填写第三方地址
-
-## 优化改进
-
-- Grok OAuth 账号上游地址改为"填什么用什么"：官方 API、区域端点、第三方转发地址均按填写值转发与探测；*.api.x.ai 区域端点纳入可信 host
-- Grok OAuth 生图/视频等媒体请求改走官方 API，避开 CLI 网关较小的请求体大小限制（自定义转发地址不受影响）
-- Codex 图片桥接配置文案澄清：区分 hosted 桥接与客户端本地 image_gen，API Key 模式提示需完全重启 Codex 后新建任务
+- 提示词安全审计引擎（默认关闭）：支持配置多个 OpenAI 兼容审计节点（优先级排序、连通性探测、API Key 加密存储），对用户最新提示词异步扫描并记录审计事件；与现有内容审核引擎完全独立，互不影响
+- 审计控制台：管理端新增运行态总览、审计节点池管理、策略配置与事件复查界面，支持保留完整提示词快照、事件筛选与一键删除筛选器
 
 ## Bug 修复
 
-- 修复 Grok OAuth 账号填写官方 API 地址保存后不生效、重新编辑被静默清空的问题
-- 修复 Grok SSO 批量建号时自定义转发地址被官方地址覆盖的问题
-- Grok CLI 网关返回 403 Access denied 时自动改用官方 API 重试可重放请求，避免试用订阅误判不可用
-- 修复 Grok /v1/models 模型清单回归：恢复返回含 reasoning effort 元数据的 Grok 专属格式，无可用模型时回落默认清单
-- Grok key 建号配置模板启用 Codex Responses WebSocket v2
-- 修复 WebSocket 下行生图结果停留在"进行中"状态的问题
-- 自定义 API Key 上游返回无效模型清单时不再破坏 Codex 能力发现：结构异常归类为可重试，换号且不污染缓存
-- 修正代理兜底设置文案为"过期兜底"
+- 修复 Grok 媒体生成多个问题：参考图 payload 归一化处理；无媒体权限的账号自动隔离并在调度时跳过；修复调度器缓存丢失媒体资格标记导致隔离失效的问题
+- 修复被动携带 image_gen namespace 的请求误触发 403 的问题：仅显式图像生成意图才要求 Responses capability，权限检查与并发槽位判定同步修正
+- 修复保存 S3 备份配置未经过敏感操作二次验证（step-up TOTP）门控的问题
 
 
 
@@ -42,10 +30,10 @@ Grok 上游端点管理全面升级：支持官方 API / 区域端点手动切�
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.158
+docker pull weishaw/sub2api:0.1.160
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.158
+docker pull ghcr.io/wei-shaw/sub2api:0.1.160
 ```
 
 **One-line install (Linux):**

@@ -2,60 +2,61 @@
 
 # Version
 
-v0.1.162
+v0.1.163
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-客户端真实 IP 解析全面可配置：支持显式可信代理与自定义 IP 请求头，反向代理/Docker 部署下正确识别来源 IP；异步生图对象存储改为后台配置，保存即生效。
+分组新增 OpenAI 推理策略控制，可按分组约束推理力度；修复优雅关停超时导致缓冲用量/计费记录丢失的问题，并集中修复多处移动端布局适配。
 
 ## 新增功能
 
-- 客户端 IP 解析设置：安全设置新增客户端 IP 模式配置，支持显式可信代理列表与自定义客户端 IP 请求头，兼容反向代理和 Docker 部署，请求头变更记录审计日志
-- 异步生图对象存储改为后台配置：备份页新增配置卡片，保存即生效；同时修复环境变量无法配置 image_storage 等凭证的问题
-- Grok 客户端工具缓存：新增管理端开关（Free 账号默认开启），覆盖 Claude Desktop、Codex Lite、Trae 客户端工具，缓存路由跨轮次保持
-- 更新检查支持配置 GitHub Token，规避未认证 API 限流
+- 分组级 OpenAI 推理策略：支持设置推理力度上限与精确映射，HTTP 与 WebSocket 转发统一强制执行
+- Grok 兼容 /responses/compact 端点：compact 请求可调度 Grok 账号，并支持链式中继的受保护视频下载
+- Redis 连接支持 ACL 用户名配置
 
 ## 优化改进
 
-- 订阅到期时间显示精确到分钟，剩余天数改为向上取整
-- OpenAI 配额不足时返回标准 insufficient quota 错误格式
-- Codex 模型发现兼容标准 OpenAI 模型列表响应格式
-- Responses 链路性能优化：SSE 事件类型解析与生图意图判定复用
-- 运维定时报表邮件模板优化
-- 前端体验：暗色模式配色统一 slate 色板、批量生图指引页接入多语言、零散硬编码文案本地化
-- docker-compose 修复：dev/local 环境 Redis 命令参数与 PostgreSQL 调优参数真正生效
+- 调度器快照发布减少临时分配，降低发布路径开销
+- 高级调度器无可用账号时补充排除原因统计，便于定位调度问题
+- 修正示例 docker-compose 中错误的镜像地址
 
 ## Bug 修复
 
-**安全与计费**
-- 部分更新 API Key 时不再静默清空 IP 白名单/黑名单
-- 修复提示词安全审计无法关闭：仅在拦截（blocking）意图下 fail-closed
-- 备份设置不再使用自动生成的临时加密密钥持久化 S3 SecretAccessKey，避免重启后无法解密
-- 同账号重试不再重复计入缓存计费
-- 修复自定义货币符号误显示为 USD 的问题
+**Grok**
+- 同步 OAuth 模型列表，策略类 403 隔离到模型级，不再影响整个账号调度
+- Codex 客户端工具在 Responses 协议上完整往返保留
+- 保留 OpenCode / CodeBuddy 的缓存会话
 
 **OpenAI / Codex**
-- HTTP 桥接首轮传输/HTTP/SSE 失败正确走账号 failover，并要求真实终态事件才结束响应
-- Codex models manifest 返回 401 时标记 OAuth 账号不可调度
-- OAuth system prompt 去重，避免重复注入
-- Codex call_id 归一化长度限制
-- Agent Identity 导入按 Team 隔离
+- Codex 级联中继保留客户端指纹
+- preserve 路径 call_id 超长时压缩至 64 字符上限
 
-**Grok**
-- 支持链式视频内容代理
-- 手动连接测试绕过调度门控，限流/冷却中的账号也能测试连通性
-- 改进 Claude Messages prompt-cache 往返
-- count_tokens 改为本地估算；配额探测瞬时失败自动重试；代理质量检查纳入 Grok
+**网关 / 转发**
+- CC 桥接与 Anthropic /responses 桥接支持上游 SSE 紧凑格式
+- SSE 字段解析兼容性增强
+- 代理探测支持双栈回退
 
-**Anthropic 兼容**
-- message_start 事件的 stop_reason 正确输出 null
-- 非流式缓冲响应的 Content-Type 修正
+**计费 / 用量**
+- 优雅关停超时不再跳过清理流程，避免缓冲的用量/计费记录丢失
+- hosted image_generation 工具的图片 token 合并计入 /responses 计费
+- 故障转移后同步缓存计费口径对齐
+- 统一后台使用记录的模型筛选口径
+- 成本明细提示框倍率保留有效小数
 
-**其他**
-- 系统原地更新与 HTTP 请求生命周期解耦，慢速网络下更新不再被 30–60 秒超时中断
-- 可用渠道页恢复滚动；用户余额弹窗暗色模式文字可读性修复
+**调度 / 监控**
+- 调度器配额元数据不再丢失
+- LastUsedAt 缓存写入隔离，避免污染调度键
+- 渠道监控 API Key 解密失败后停止调度该账号
+
+**界面 / 移动端**
+- 修复运维监控、账号管理等多处移动端布局溢出问题
+- iOS 输入框聚焦不再触发页面自动缩放
+- 用户侧套餐有效期单位不再把「月/周」显示成「天」
+- 优惠码编辑弹窗过期时间改用本地时间预填
+- 系统日志清理被拒绝时显示后端具体原因
+- 用量页用户搜索结果与最新查询对齐，修复竞态
 
 
 
@@ -66,10 +67,10 @@ v0.1.162
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.162
+docker pull weishaw/sub2api:0.1.163
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.162
+docker pull ghcr.io/wei-shaw/sub2api:0.1.163
 ```
 
 **One-line install (Linux):**

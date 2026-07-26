@@ -2,35 +2,40 @@
 
 # Version
 
-v0.1.164
+v0.1.165
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增聚合分组能力，一个分组可按模型路由规则将请求分发到不同平台的子分组；Ollama 账号支持 Cloud 官方用量自动刷新。
+新增 ChatGPT Live（Frameless 实时会话）网关支持，并完整适配 Anthropic 新模型 claude-opus-5。
 
 ## 新增功能
 
-- 聚合分组：新增 composite 平台类型分组，可配置模型路由规则，将不同模型的请求分发到已关联的各平台子分组，支持模型别名与路由预览，计费按实际转发的具体模型结算
-- Ollama Cloud 用量同步：Ollama 账号支持自动刷新 Cloud 官方用量
-- 支付宝移动端支付：预下单支持深链拉起支付宝客户端完成支付
+- ChatGPT Live 网关：新增 `/v1/live` 与 Codex `/backend-api/codex/realtime/calls` 实时会话转发，支持组级 Live 开关、并发租约控制与用量记录，用量筛选/导出新增 Live 请求类型
+- 适配 Anthropic claude-opus-5：模型清单、Bedrock 默认映射、定价（$5/$25 per MTok、1M 上下文、128K 输出）、前端预设映射与限流 scope 全部登记
+- Ollama Cloud 用量改为请求驱动刷新：空闲账号不再轮询，新增「请求安静等待」参数（默认 1 分钟），原刷新周期改为持续请求下的最长等待时间
+- 用量记录持久化客户端会话标识 session_id，可用于跨请求关联同一会话
+- 后台公告新增预览功能：发布前可直接查看公告弹窗的实际展示效果
 
 ## 优化改进
 
-- OpenAI 账号测试默认使用具体模型 gpt-5.6-sol，不再优先别名 gpt-5.6
-- Codex 身份批量导入的账号索引优化，提升大批量导入性能
-- 模型限流恢复时间超过 24 小时按天显示，并在提示中补全具体日期
+- 统一公告富文本样式，修复首页公告弹窗样式错乱
+- 推广页复制按钮适配移动端窄屏布局
+- 图像请求日志补充记录请求的 quality 与 size，便于定位失败原因
 
 ## Bug 修复
 
-- 修复 OpenAI OAuth 透传路径缺少 input 规范化导致的 "Input must be a list" 报错
-- OpenAI 流式响应异常断开后隔离对应代理，避免故障代理反复影响请求
-- Grok 账号收到 402 后进入冷却，不再继续参与调度
-- 修复简易模式自动选择 Grok 默认模型时图片能力未启用的问题
-- 修复渠道定价因模型名未归一化导致匹配失败的问题
-- 修复 CC Switch 导入时 Grok 密钥未归入 Grok Build 平台的问题
-- 审计日志不再记录 Ollama 会话明文，并收紧凭证清理守卫
+- 注册查重归一化邮箱别名（点号、+后缀、googlemail），防止单个收件箱批量注册；同时修复域名尾随点绕过、`+xxx@` 合法用户被永久误拒与并发注册竞态
+- 修复 Ollama 用量刷新在 PostgreSQL 14/15/16 上到期判定失效导致部分账号永不刷新，并恢复 15 分钟抓取下限
+- 修复 Live 会话租约续租失败后空转：现在直接终止会话并补写用量记录，避免占着上游连接却不计入并发限制
+- 修复 Gemini chat completions 丢失图像输出
+- 修复 Grok Responses 请求中只有 tool_choice 没有 tools 时被上游拒绝
+- 修复 Grok 池模式账号遇上游 5xx 被临时停止调度
+- 修复 OpenAI 池模式下已显式配置同账号重试的状态码仍被记为账号级冷却，导致重试预算提前耗尽
+- 修复 API Key 账号的 Responses 请求缺少 item ID 净化
+- 修复 HTTP 转发前 input 项残留 namespace 前缀
+- 修复未配置远程定价 URL 时仍启动远程定价刷新调度器
 
 
 
@@ -41,10 +46,10 @@ v0.1.164
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.164
+docker pull weishaw/sub2api:0.1.165
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.164
+docker pull ghcr.io/wei-shaw/sub2api:0.1.165
 ```
 
 **One-line install (Linux):**

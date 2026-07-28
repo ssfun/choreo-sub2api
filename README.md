@@ -2,40 +2,48 @@
 
 # Version
 
-v0.1.165
+v0.1.166
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 ChatGPT Live（Frameless 实时会话）网关支持，并完整适配 Anthropic 新模型 claude-opus-5。
+新增面板 API 限流保护，防止高频请求冲击数据库；修复 WebSocket 多轮会话计费、模型映射统计口径等多项计费与统计准确性问题。
 
 ## 新增功能
 
-- ChatGPT Live 网关：新增 `/v1/live` 与 Codex `/backend-api/codex/realtime/calls` 实时会话转发，支持组级 Live 开关、并发租约控制与用量记录，用量筛选/导出新增 Live 请求类型
-- 适配 Anthropic claude-opus-5：模型清单、Bedrock 默认映射、定价（$5/$25 per MTok、1M 上下文、128K 输出）、前端预设映射与限流 scope 全部登记
-- Ollama Cloud 用量改为请求驱动刷新：空闲账号不再轮询，新增「请求安静等待」参数（默认 1 分钟），原刷新周期改为持续请求下的最长等待时间
-- 用量记录持久化客户端会话标识 session_id，可用于跨请求关联同一会话
-- 后台公告新增预览功能：发布前可直接查看公告弹窗的实际展示效果
+- 面板 API 限流：管理后台可配置面板接口限流策略，认证接口按用户、公开接口按真实 IP 限流，保护数据库免受高频请求冲击
 
 ## 优化改进
 
-- 统一公告富文本样式，修复首页公告弹窗样式错乱
-- 推广页复制按钮适配移动端窄屏布局
-- 图像请求日志补充记录请求的 quality 与 size，便于定位失败原因
+- Antigravity OpenAI 兼容转发全面加固，并拒绝仅含 usage 的非流式空响应
+- Codex Responses 与 Anthropic 协议互转兼容性完善（工具调用配对等场景）
+- 伪装的 Claude Code CLI 版本号升级到 2.1.220
+- Caddy 部署配置禁用 SSE 压缩缓冲，修复流式响应卡顿
+- 可用渠道列表适配移动端显示
+- 升级图像处理与遥测相关依赖，修复安全漏洞
 
 ## Bug 修复
 
-- 注册查重归一化邮箱别名（点号、+后缀、googlemail），防止单个收件箱批量注册；同时修复域名尾随点绕过、`+xxx@` 合法用户被永久误拒与并发注册竞态
-- 修复 Ollama 用量刷新在 PostgreSQL 14/15/16 上到期判定失效导致部分账号永不刷新，并恢复 15 分钟抓取下限
-- 修复 Live 会话租约续租失败后空转：现在直接终止会话并补写用量记录，避免占着上游连接却不计入并发限制
-- 修复 Gemini chat completions 丢失图像输出
-- 修复 Grok Responses 请求中只有 tool_choice 没有 tools 时被上游拒绝
-- 修复 Grok 池模式账号遇上游 5xx 被临时停止调度
-- 修复 OpenAI 池模式下已显式配置同账号重试的状态码仍被记为账号级冷却，导致重试预算提前耗尽
-- 修复 API Key 账号的 Responses 请求缺少 item ID 净化
-- 修复 HTTP 转发前 input 项残留 namespace 前缀
-- 修复未配置远程定价 URL 时仍启动远程定价刷新调度器
+- 修复 WebSocket 多轮会话统一按单一模型计费的问题，现按每轮实际使用的模型计费
+- 修复账号故障切换时残留其他账号 reasoning 内容导致上游报错的问题
+- 修复经第三方代理转发的 Claude Code 请求未被识别、导致上游 prompt 缓存失效的问题
+- 修复模型映射后用量统计口径错误的问题，现保留最终上游模型
+- 修复 Antigravity Gemini 3.6 Flash 缺少定价导致计费异常的问题
+- 修复系统设置部分更新时未提交字段被清空的问题
+- 修复组合分组前缀路由未配置上游模型时请求模型丢失的问题
+- 修复 CONFIG_FILE 显式指定配置文件路径不生效的问题
+- 修复 Grok 账号手动测试遇支付失败（402）时未暂停账号的问题
+- 修复 Gemini 号池模式下可重试错误未触发自动重试的问题
+- 修复计费探针纳秒时间戳解析失败导致探测不执行的问题
+- 修复支付看板多币种统计混算的问题，现按币种分组展示
+- 修复管理端用量日志无法按请求 ID 筛选的问题
+- 修复管理端用量筛选中路由用户不显示的问题
+- 修复注册页可选推广码输入框不显示的问题
+- 修复安全审计提示词配置不可用时仍被加载的问题
+- 修复 Gemini 兼容层丢失 Hermes 网页搜索函数声明的问题
+- 修复分组描述换行及下拉框视口边界溢出的显示问题
+- 修复渠道监控时间线在窄卡片下溢出的问题
 
 
 
@@ -46,10 +54,10 @@ v0.1.165
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.165
+docker pull weishaw/sub2api:0.1.166
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.165
+docker pull ghcr.io/wei-shaw/sub2api:0.1.166
 ```
 
 **One-line install (Linux):**

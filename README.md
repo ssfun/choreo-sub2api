@@ -2,51 +2,54 @@
 
 # Version
 
-v0.1.173
+v0.1.175
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-完善 Grok/xAI 平台集成（授权、模型映射、媒体/Voice/搜索计费与调度门禁），并新增基于真实网关流量的被动式渠道监控 V2。
+新增 Codex OAuth 设备指纹收敛功能，有效减少上游可见的设备数和会话数；支持按上游响应模型计费。
 
 ## 新增功能
 
-- Grok 授权补齐：支持 SSO 登录与 refresh_token 重新授权，OAuth 会话跨实例共享，多副本部署可用
-- Grok 网关能力扩展：新增图片/视频媒体路由、Voice TTS/STT/Realtime、custom voices 全量管理与 /v1/web_search
-- Grok 计费维度扩展：视频支持按模型族 × 分辨率定价，搜索按每千次调用计价
-- Grok 模型映射设置：可配置默认文本模型与跨客户端映射开关，运行时修改即时生效
-- Grok free 档软门禁：按本地近 24 小时用量保护调度，free 额度与账单额度耗尽改为可恢复的临时下线
-- Grok 调度增强：team+model 维度冷却、流式空闲换号、7d/30d 调度阈值窗口与命中理由展示
-- 渠道监控 V2：基于真实网关流量被动聚合，不再向上游发探活请求，用户端提供健康 KPI、脉冲矩阵、趋势与模型/错误排行
-- 渠道监控模式开关：系统设置中 v1（主动探测）与 v2（被动聚合）互斥切换，支持对普通用户隐藏 RPM/TPM
-- 邮箱域名限量注册：白名单非空时，未列入白名单的域名按主域名（eTLD+1）归一化，每个主域名限注册一个账户，独立开关默认关闭
-- 管理端账号测试支持 Grok 真实媒体预览，分组页支持按模型族 × 分辨率的视频价矩阵输入
+- Codex OAuth 设备指纹收敛：四档策略（off/device/session/full），收敛 installation_id、session_id、thread_id 等标识，减少上游配额限制
+- 按上游响应模型计费：渠道可选择以上游实际返回的模型作为计费基准
+- 大文件备份分卷上传与恢复
 
 ## 优化改进
 
-- 优化上游响应模型观察的热路径性能
-- OpenAI OAuth 请求转发路由提示（routing hints），并停止注入已废弃的 legacy beta 头
-- 用量单元格区分 Grok free 24h 与付费窗口，Grok/OpenAI 付费套餐徽章着色
-- 管理端账号测试的媒体上传与文件选择器补齐中英文文案
-- 导入探测队列改为有界并去重，避免批量导入打爆上游
+- 运营监控内存容量显示优化
+- 简单模式下显示安全审计菜单入口
+- Composite 分组支持图片生成权限开关
+- API Key 配额和到期时间输入校验
 
 ## Bug 修复
 
-- 修复 Gemini 原生生图在自定义模型名下记 $0 的问题，改按上游实际返回的图片张数计费
-- 修复 Gemini 池模式下账号被 429 响应错误打上账号级限流
-- 修复非流式生图时客户端断开导致图已生成却不扣费
-- 修复 Grok 异步视频在 pending/失败任务上的误扣费与重复扣费
-- 修复 Grok 流式路径下同一次搜索被重复计数
-- 修复 Grok OAuth 客户端缺失导致的服务崩溃
-- 修复 Grok 模型级配额软封会牵连同账号其它模型
-- 修复管理端 Web 搜索配置在设置缺失时的空值处理与重置弹窗滚动
-
-## 破坏性变更
-
-- Grok 跨厂商模型映射默认关闭：升级后 gpt-* / claude-* 请求不再被隐式改写为 grok-4.5，改为按原模型透传。需保持旧行为的部署请在系统设置中显式开启「跨客户端模型映射」
-- Grok 邮箱密码登录已隐藏并硬禁用：gateway.grok.password_auth_enabled 仅作配置兼容保留，服务端忽略该值
-- 数据库迁移 220 会清理非 Grok 分组的历史视频定价残值（视频为 Grok/xAI 独有能力）
+- 修复上游 HTML 403 页面被误判为账号级错误导致账号批量下线的问题
+- 修复 OpenAI 个人订阅到期时间被 workspace 权益覆盖的问题
+- 修复 Responses 空 completed 流未触发 failover 导致空回复的问题
+- 修复原生 Responses 路径将上游确定性 400 转为可重试 502 导致请求放大的问题
+- 修复 OpenAI 嵌套 data 结构 usage 解析优先级问题
+- 修复 Responses 可见输出 TTFT 计算不准确的问题
+- 修复 WebSocket v2 终止事件被计入 TTFT 的问题
+- 修复 OAuth 图片流错误未触发 failover 的问题
+- 修复 Codex 容量退避指数被重置的问题
+- 修复 Grok 聊天 usage 守卫一致性及兼容账号计费缺失的问题
+- 修复 ChatCompletions reasoning 别名不被接受的问题
+- 修复 compact keepalive 提交 headers 后无 SSE 有效载荷导致客户端挂起的问题
+- 修复 User-Agent 未校验导致账号指纹被本地构建客户端永久污染的问题
+- 修复 Codex 调度阈值快照陈旧和 usage 百分比丢失的问题
+- 修复 API Key 透传路径 reasoning item ID 无效导致 400 的问题
+- 修复 OpenAI 透传池认证失败未先重试即 failover 的问题
+- 修复 WebSocket 安全审计日志重复记录和丢失的问题
+- 修复 Gemini 工具 schema exclusiveMinimum 未归一化的问题
+- 修复 cyber policy 审计事件范围不正确的问题
+- 修复 service-tier 定价未应用到账号成本计算的问题
+- 修复调度阈值未设置时缓存未命中的问题
+- 修复按上游响应模型计费准入过宽的安全问题
+- 修复管理端用量表请求 ID 列不可见的问题
+- 修复账号调度阈值 i18n 键嵌套错误的问题
+- 回退风控后端异常时 fail-closed 行为
 
 
 
@@ -57,10 +60,10 @@ v0.1.173
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.173
+docker pull weishaw/sub2api:0.1.175
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.173
+docker pull ghcr.io/wei-shaw/sub2api:0.1.175
 ```
 
 **One-line install (Linux):**

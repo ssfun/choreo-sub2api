@@ -2,54 +2,37 @@
 
 # Version
 
-v0.1.175
+v0.1.176
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 Codex OAuth 设备指纹收敛功能，有效减少上游可见的设备数和会话数；支持按上游响应模型计费。
+新增 Grok 4.6 模型支持与 JWT 订阅档位识别；分组支持逐模型定价与长上下文阶梯开关；新增原生 x_search 搜索端点。
 
 ## 新增功能
 
-- Codex OAuth 设备指纹收敛：四档策略（off/device/session/full），收敛 installation_id、session_id、thread_id 等标识，减少上游配额限制
-- 按上游响应模型计费：渠道可选择以上游实际返回的模型作为计费基准
-- 大文件备份分卷上传与恢复
+- Grok 4.6：新增 grok-4.6 / grok-4.6-latest 目录、官方定价（含缓存读取价与 200k 长上下文倍率）与请求路径支持
+- JWT 订阅档位识别：从 Grok Build access token 解码 tier claim，自动识别 free/SuperGrok/Heavy/Lite 等档位，刷新后覆盖失效订阅
+- 分组逐模型定价：分组新增 model_pricing 与 long_context_pricing_enabled 字段，解析链改为 Group → Channel → 内置，关闭长上下文时 token 模型只取最低档
+- x_search 端点：新增独立 POST /x_search（仅 Grok 分组），复用 web_search 的审计、failover 与按次计费
+- Chat↔Responses 保留 x_search 过滤字段与 tool_choice，上游补 sources 抽取
 
 ## 优化改进
 
-- 运营监控内存容量显示优化
-- 简单模式下显示安全审计菜单入口
-- Composite 分组支持图片生成权限开关
-- API Key 配额和到期时间输入校验
+- 账号徽章与用量格按实时档位展示，避免账单滞后误判
+- SuperGrokPro 用 grok-4.5 窗口区分 Heavy 档位，容量抖动时只封单模型而非整号
 
 ## Bug 修复
 
-- 修复上游 HTML 403 页面被误判为账号级错误导致账号批量下线的问题
-- 修复 OpenAI 个人订阅到期时间被 workspace 权益覆盖的问题
-- 修复 Responses 空 completed 流未触发 failover 导致空回复的问题
-- 修复原生 Responses 路径将上游确定性 400 转为可重试 502 导致请求放大的问题
-- 修复 OpenAI 嵌套 data 结构 usage 解析优先级问题
-- 修复 Responses 可见输出 TTFT 计算不准确的问题
-- 修复 WebSocket v2 终止事件被计入 TTFT 的问题
-- 修复 OAuth 图片流错误未触发 failover 的问题
-- 修复 Codex 容量退避指数被重置的问题
-- 修复 Grok 聊天 usage 守卫一致性及兼容账号计费缺失的问题
-- 修复 ChatCompletions reasoning 别名不被接受的问题
-- 修复 compact keepalive 提交 headers 后无 SSE 有效载荷导致客户端挂起的问题
-- 修复 User-Agent 未校验导致账号指纹被本地构建客户端永久污染的问题
-- 修复 Codex 调度阈值快照陈旧和 usage 百分比丢失的问题
-- 修复 API Key 透传路径 reasoning item ID 无效导致 400 的问题
-- 修复 OpenAI 透传池认证失败未先重试即 failover 的问题
-- 修复 WebSocket 安全审计日志重复记录和丢失的问题
-- 修复 Gemini 工具 schema exclusiveMinimum 未归一化的问题
-- 修复 cyber policy 审计事件范围不正确的问题
-- 修复 service-tier 定价未应用到账号成本计算的问题
-- 修复调度阈值未设置时缓存未命中的问题
-- 修复按上游响应模型计费准入过宽的安全问题
-- 修复管理端用量表请求 ID 列不可见的问题
-- 修复账号调度阈值 i18n 键嵌套错误的问题
-- 回退风控后端异常时 fail-closed 行为
+- 修复定时备份未加 leader 锁导致多实例重复备份的问题
+- 修复分组平台变更后渠道缓存未失效，导致定价/模型映射/白名单最长滞后 10 分钟的问题
+- 修复渠道定价冲突检测与定价缓存 key 归一化不一致，导致同名价卡静默覆盖的问题
+- 修复 Responses 探测在响应未跑完（截断/失败）时误判为「上游不支持」，导致长期走 Chat 转换、缓存命中率暴跌的问题
+- 修复 Realtime 音频计费标志位求值顺序错误，导致所有会话漏计的问题
+- 修复未登记的 Grok 文本模型在闭集价卡上 fail-closed、请求成功而用量记 0 的问题
+- 修复长上下文定价迁移默认值为 false 导致存量分组静默丢失 ≥200k 阶梯的问题
+- 修复账号徽章读取错误的快照字段、增量刷新不比较 Grok 快照导致档位更新后不替换的问题
 
 
 
@@ -60,10 +43,10 @@ v0.1.175
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.175
+docker pull weishaw/sub2api:0.1.176
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.175
+docker pull ghcr.io/wei-shaw/sub2api:0.1.176
 ```
 
 **One-line install (Linux):**

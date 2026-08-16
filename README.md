@@ -2,37 +2,34 @@
 
 # Version
 
-v0.1.176
+v0.1.177
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 Grok 4.6 模型支持与 JWT 订阅档位识别；分组支持逐模型定价与长上下文阶梯开关；新增原生 x_search 搜索端点。
+分组用量统计引入按日汇总，大数据量下更快更准；Codex 全面适配上游 remote compaction v2，压缩探测与路由不再依赖已下线的旧接口。
 
 ## 新增功能
 
-- Grok 4.6：新增 grok-4.6 / grok-4.6-latest 目录、官方定价（含缓存读取价与 200k 长上下文倍率）与请求路径支持
-- JWT 订阅档位识别：从 Grok Build access token 解码 tier claim，自动识别 free/SuperGrok/Heavy/Lite 等档位，刷新后覆盖失效订阅
-- 分组逐模型定价：分组新增 model_pricing 与 long_context_pricing_enabled 字段，解析链改为 Group → Channel → 内置，关闭长上下文时 token 模型只取最低档
-- x_search 端点：新增独立 POST /x_search（仅 Grok 分组），复用 web_search 的审计、failover 与按次计费
-- Chat↔Responses 保留 x_search 过滤字段与 tool_choice，上游补 sources 抽取
+- 分组用量统计按日汇总：新增日汇总表与自动汇聚，分组页与仪表盘的用量统计性能大幅提升
 
 ## 优化改进
 
-- 账号徽章与用量格按实时档位展示，避免账单滞后误判
-- SuperGrokPro 用 grok-4.5 窗口区分 Heavy 档位，容量抖动时只封单模型而非整号
+- Codex 请求补齐会话级 beta 功能头（remote_compaction_v2），与官方客户端行为对齐
+- Codex 回合状态头 x-codex-turn-state 现会回传给客户端，并拦截跨账号回显，保障回合链路一致
+- 账号"压缩测试"改用原生 remote compaction v2 探测，上游旧接口下线后不再误报失败
+- 远程压缩 v2 与旧版压缩路由分离，原生 v2 请求保留 /responses 端点不再被改写
 
 ## Bug 修复
 
-- 修复定时备份未加 leader 锁导致多实例重复备份的问题
-- 修复分组平台变更后渠道缓存未失效，导致定价/模型映射/白名单最长滞后 10 分钟的问题
-- 修复渠道定价冲突检测与定价缓存 key 归一化不一致，导致同名价卡静默覆盖的问题
-- 修复 Responses 探测在响应未跑完（截断/失败）时误判为「上游不支持」，导致长期走 Chat 转换、缓存命中率暴跌的问题
-- 修复 Realtime 音频计费标志位求值顺序错误，导致所有会话漏计的问题
-- 修复未登记的 Grok 文本模型在闭集价卡上 fail-closed、请求成功而用量记 0 的问题
-- 修复长上下文定价迁移默认值为 false 导致存量分组静默丢失 ≥200k 阶梯的问题
-- 修复账号徽章读取错误的快照字段、增量刷新不比较 Grok 快照导致档位更新后不替换的问题
+- 修复 Grok 长上下文计费被 OpenAI 账号开关否决的问题，现仅跟随分组开关
+- 修复带版本号的 Grok 媒体模型（如 grok-2-image-1212）被误按文本 token 计价的问题
+- 修复账号页自动刷新偏好在页面加载时被覆盖导致失效的问题
+
+## 破坏性变更
+
+- Codex OAuth 账号的指纹收敛开关默认值改为"关闭"：v0.1.175 会将未配置该项的账号隐式按"会话级收敛"处理，静默改写客户端标识。升级后未显式配置的账号将停止收敛、恢复透传客户端原始标识；已显式选择档位（关闭/设备/会话/完全）的账号行为不变。如需继续收敛，请在账号编辑中显式选择档位。另外收敛现已同时覆盖透传路径。
 
 
 
@@ -43,10 +40,10 @@ v0.1.176
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.176
+docker pull weishaw/sub2api:0.1.177
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.176
+docker pull ghcr.io/wei-shaw/sub2api:0.1.177
 ```
 
 **One-line install (Linux):**

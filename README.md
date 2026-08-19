@@ -2,34 +2,52 @@
 
 # Version
 
-v0.1.177
+v0.1.178
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-分组用量统计引入按日汇总，大数据量下更快更准；Codex 全面适配上游 remote compaction v2，压缩探测与路由不再依赖已下线的旧接口。
+新增支持 Kimi/智谱/DeepSeek 供应商，渠道监控新增配额模式，渠道模型支持谷峰定价。
 
 ## 新增功能
 
-- 分组用量统计按日汇总：新增日汇总表与自动汇聚，分组页与仪表盘的用量统计性能大幅提升
+- 新增 Kimi/智谱/DeepSeek 供应商支持：多协议接入，含分组创建入口、渠道定价与配额/余额监控
+- 渠道监控配额模式：监控检查可切换为配额快照模式，覆盖 8 个平台，新增公开开关（默认关闭）
+- 渠道模型谷峰定价：token 计费渠道可按时段配置价格倍率
+- OpenAI Team 账号联动熔断
+- OpenAI 账号批量设置
+- Grok 用量条补齐本站 24h/7d/30d 聚合
+- Ollama 账号支持用量查询
+- Ops 错误详情弹窗支持自定义时间区间
 
 ## 优化改进
 
-- Codex 请求补齐会话级 beta 功能头（remote_compaction_v2），与官方客户端行为对齐
-- Codex 回合状态头 x-codex-turn-state 现会回传给客户端，并拦截跨账号回显，保障回合链路一致
-- 账号"压缩测试"改用原生 remote compaction v2 探测，上游旧接口下线后不再误报失败
-- 远程压缩 v2 与旧版压缩路由分离，原生 v2 请求保留 /responses 端点不再被改写
+- 统一 Codex OAuth 出站身份：凭据面与真实客户端对齐，消除模型版本漂移
+- 透传 WS 二进制帧纳入策略链（模型映射、安全审计等此前仅覆盖文本帧）
+- 透传会话的谷峰倍率取值时刻从记录时刻改为 turn 开始时刻
+- 仪表盘 Token 卡片明细纳入缓存 token
+- 原生表单控件适配暗色模式
+- Ops 错误分布图例显示分类标签；SLA 卡片在空窗口时显示中性状态而非误报
+- OpenAI Fast/Flex 策略规则说明优化；公告列表空状态文案优化
 
 ## Bug 修复
 
-- 修复 Grok 长上下文计费被 OpenAI 账号开关否决的问题，现仅跟随分组开关
-- 修复带版本号的 Grok 媒体模型（如 grok-2-image-1212）被误按文本 token 计价的问题
-- 修复账号页自动刷新偏好在页面加载时被覆盖导致失效的问题
-
-## 破坏性变更
-
-- Codex OAuth 账号的指纹收敛开关默认值改为"关闭"：v0.1.175 会将未配置该项的账号隐式按"会话级收敛"处理，静默改写客户端标识。升级后未显式配置的账号将停止收敛、恢复透传客户端原始标识；已显式选择档位（关闭/设备/会话/完全）的账号行为不变。如需继续收敛，请在账号编辑中显式选择档位。另外收敛现已同时覆盖透传路径。
+- 修复 OpenAI 自定义工具在 WS-HTTP 桥接与 API-key 路径下丢失的问题
+- 修复 Codex 额度探针模型兼容性问题
+- 修复邀请码并发注册竞争问题：邀请码消费与用户创建原子化
+- 修复 Kimi/智谱/DeepSeek 分组的调度闸门、计费、断开漏记、count_tokens、403 处理五项缺陷
+- 修复 Gemini includeServerSideToolInvocations 参数丢失及 Antigravity 混合工具配置被破坏的问题
+- 修复 Gemini 上游 4xx 错误被硬改为 500 的问题
+- 修复透传账号模型发现不对齐的问题
+- 修复 Anthropic SSE 过载错误未正确处理的问题
+- 修复认证快照丢失分组定价的问题
+- 修复 Claude 顶层 deferred tools 不支持及其 cache_control 处理问题
+- 修复未配置 SMTP 时仍尝试发送到期提醒的问题
+- 修复 Ops 批量写入失败后退化为单条插入的问题
+- 修复账号助手数据加载相互干扰的问题
+- 修复 Grok 预付费/用量为空时仍显示的问题，以及 Grok 响应模型审计别名不一致
+- 修复多处 i18n 缺失/误引（代理列表过期状态、Kimi/智谱/DeepSeek 余额单元格、顶栏角色标签）
 
 
 
@@ -40,10 +58,10 @@ v0.1.177
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.177
+docker pull weishaw/sub2api:0.1.178
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.177
+docker pull ghcr.io/wei-shaw/sub2api:0.1.178
 ```
 
 **One-line install (Linux):**

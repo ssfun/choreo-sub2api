@@ -2,52 +2,58 @@
 
 # Version
 
-v0.1.178
+v0.1.179
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增支持 Kimi/智谱/DeepSeek 供应商，渠道监控新增配额模式，渠道模型支持谷峰定价。
+国产供应商账号新增自适应 API 协议，同一账号可同时承接 Chat/Anthropic/Responses 三种协议；渠道定价新增服务层级与上下文区间倍率，并修复配置渠道价后 Fast 溢价被抹平的问题。
 
 ## 新增功能
 
-- 新增 Kimi/智谱/DeepSeek 供应商支持：多协议接入，含分组创建入口、渠道定价与配额/余额监控
-- 渠道监控配额模式：监控检查可切换为配额快照模式，覆盖 8 个平台，新增公开开关（默认关闭）
-- 渠道模型谷峰定价：token 计费渠道可按时段配置价格倍率
-- OpenAI Team 账号联动熔断
-- OpenAI 账号批量设置
-- Grok 用量条补齐本站 24h/7d/30d 聚合
-- Ollama 账号支持用量查询
-- Ops 错误详情弹窗支持自定义时间区间
+- 账号自适应 API 协议：Kimi/智谱 GLM/DeepSeek API Key 账号可选 adaptive，同一账号同时承接 Chat Completions、Anthropic Messages 与 OpenAI Responses，优先走供应商原生端点，支持分别配置三种协议的 Base URL
+- 渠道定价服务层级倍率：fast_multiplier / flex_multiplier 可覆盖内置的 2.0 / 0.5 倍率
+- 渠道上下文区间倍率：区间可只配倍率不配绝对价，按渠道基础价换算，长上下文阶梯不再依赖内置价卡
+- 原生 Anthropic 转发识别 Fast mode（speed: "fast"）并按 Fast 价计费、写入用量日志
+- Composite 分组支持 Codex 端点：复用现有 Codex 模型清单选择与故障转移，含 Alpha Search 与 Live
+- Composite 分组支持 Kimi / 智谱 GLM / DeepSeek：覆盖平台识别、路由、渠道定价/映射与管理端配置
+- 国产供应商账号支持请求头覆写（Kimi/智谱/DeepSeek API Key 账号）
+- 代理连通性探测目标可配置：支持有序探测列表与按目标解析（ip-api / ipify / chatgpt-trace），留空沿用内置默认
+- 支持 POST /v1/responses/input_tokens 预检：官方端点透传真实计数，自定义中转/Grok/国产供应商返回本地估算
 
 ## 优化改进
 
-- 统一 Codex OAuth 出站身份：凭据面与真实客户端对齐，消除模型版本漂移
-- 透传 WS 二进制帧纳入策略链（模型映射、安全审计等此前仅覆盖文本帧）
-- 透传会话的谷峰倍率取值时刻从记录时刻改为 turn 开始时刻
-- 仪表盘 Token 卡片明细纳入缓存 token
-- 原生表单控件适配暗色模式
-- Ops 错误分布图例显示分类标签；SLA 卡片在空窗口时显示中性状态而非误报
-- OpenAI Fast/Flex 策略规则说明优化；公告列表空状态文案优化
+- 管理端用量统计改为单次扫描聚合（GROUPING SETS 替代原四次扫描），并为请求/上游模型筛选新增并发表达式索引；千万级用量表下过滤查询由 20 秒级降至秒级
+- 用量统计的全部筛选条件（含 upstream_model_mismatch）现已一致作用于总计与各端点分项
+- 本地 404 model_not_found 不再计入 SLA，标记为业务限制并清理上游归因残留
+- 补全管理端平台筛选：订阅、账号列表、运维看板与错误透传规则均覆盖 Grok/Kimi/智谱/DeepSeek/Composite，改由共享平台目录维护
+- 渠道监控后续优化：配额抓取按状态码判定凭据失效（500/429/业务错误不再误判失败）、能力校验与非法模式组合在写入时拒绝、单次抓取只加载一次账号
+- 监控表单的检查模式还原、账号解绑与模式徽标修正；quota 占位模型在监控视图中本地化显示
+- 内置价卡补充：claude-opus-4.8 / claude-opus-5 补 Fast 价，gpt-5.5 与 gpt-5.5-pro 改用各自官方独立价
+- 管理端用户角色选择器样式对齐；国产供应商配额标签不再与进度条重叠
+- 清理已下线 Sora 平台的残留配置项
 
 ## Bug 修复
 
-- 修复 OpenAI 自定义工具在 WS-HTTP 桥接与 API-key 路径下丢失的问题
-- 修复 Codex 额度探针模型兼容性问题
-- 修复邀请码并发注册竞争问题：邀请码消费与用户创建原子化
-- 修复 Kimi/智谱/DeepSeek 分组的调度闸门、计费、断开漏记、count_tokens、403 处理五项缺陷
-- 修复 Gemini includeServerSideToolInvocations 参数丢失及 Antigravity 混合工具配置被破坏的问题
-- 修复 Gemini 上游 4xx 错误被硬改为 500 的问题
-- 修复透传账号模型发现不对齐的问题
-- 修复 Anthropic SSE 过载错误未正确处理的问题
-- 修复认证快照丢失分组定价的问题
-- 修复 Claude 顶层 deferred tools 不支持及其 cache_control 处理问题
-- 修复未配置 SMTP 时仍尝试发送到期提醒的问题
-- 修复 Ops 批量写入失败后退化为单条插入的问题
-- 修复账号助手数据加载相互干扰的问题
-- 修复 Grok 预付费/用量为空时仍显示的问题，以及 Grok 响应模型审计别名不一致
-- 修复多处 i18n 缺失/误引（代理列表过期状态、Kimi/智谱/DeepSeek 余额单元格、顶栏角色标签）
+- 修复 Chat Completions 非流式桥接中上游响应体读取失败（unexpected EOF / HTTP/2 stream reset）未触发故障转移、退化为通用 502 的问题
+- 修复 OpenAI 容量过载仅以文本消息形式返回时未被识别、无法在输出前恢复的问题
+- 修复 Responses WebSocket http_bridge 后续轮次遭遇上游 429 时无法切换账号的问题
+- 修复 WS HTTP bridge 多轮会话丢失首轮客户端工具映射，以及客户端工具历史 item id 不被上游接受的问题
+- 修复 Responses→Chat 桥接下 encrypted-only reasoning item 无法回传 reasoning_content，导致 DeepSeek thinking 上游持续 400 的问题
+- 修复 Grok 内联图片与客户端 view_image 工具冲突，导致模型只回复行动预告、不识别图片的问题
+- 修复 Grok tool_search_output 未按标准 function_call_output 下发，以及工具搜索发现结果未提升为可调用工具的问题
+- 修复 grok-4.6 / grok-4.6-latest 的 xhigh 推理档位被降级为 high 的问题
+- 修复国产供应商账号连接测试未按 api_protocol 路由、chat_completions 账号走到 Anthropic 测试路径返回 404 的问题
+
+## 破坏性变更
+
+- 长上下文计费门控由「分组开关 AND 账号开关」改为「任一启用即生效」。由于分组开关默认启用、账号开关默认关闭，存量部署中 OpenAI 账号超过 272k 上下文的请求将开始按 2× 输入 / 1.5× 输出计费（此前被账号默认值否决）。如需维持原有账单口径，请在升级后将相关分组的 long_context_pricing_enabled 置为 false。
+
+## 升级指南
+
+1. 本版本包含 3 个数据库迁移：226（用量日志表达式索引，CONCURRENTLY 创建，构建期间读写不阻塞，但千万级数据量下耗时较长）、227（Composite 路由放开国产供应商）、228（渠道定价倍率列）
+2. 升级后请先确认长上下文计费口径（见破坏性变更），再按需为分组/渠道配置 fast/flex 与区间倍率
 
 
 
@@ -58,10 +64,10 @@ v0.1.178
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.178
+docker pull weishaw/sub2api:0.1.179
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.178
+docker pull ghcr.io/wei-shaw/sub2api:0.1.179
 ```
 
 **One-line install (Linux):**

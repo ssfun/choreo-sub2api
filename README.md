@@ -2,20 +2,23 @@
 
 # Version
 
-v0.1.181
+v0.1.183
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-提升 Gemini、Grok 和 OpenAI 接口兼容性，修复工具调用及长对话请求中的上游参数错误。
+本版本集中修复 OpenAI、Kimi、Antigravity、邮箱绑定及频道监控等场景的调度、会话与兼容性问题，提升请求成功率和账号状态判断准确性。
 
 ## Bug 修复
 
-- Gemini：清理工具 Schema 中上游不支持的字段
-- Grok：使用官方 CLI User-Agent 发起上游请求
-- OpenAI Responses Lite：保留 additional_tools 请求所需的 parallel_tool_calls 参数
-- OpenAI Responses：批量清理同类型输入项中不受支持的 status 字段，避免长对话重试失败
+- OpenAI OAuth：识别 5 小时/7 天配额耗尽的 429，并按重置时间暂停账号；普通瞬时 429 继续重试。
+- Kimi：并发限制 403 改为临时冷却并保留故障转移，避免误将账号永久禁用。
+- OpenAI：支持 Codex `session-id` 请求头，保持重连请求的粘性会话；容量溢出时不迁移持久绑定。
+- OpenAI Responses：修正 custom tool/tool search 调用恢复后的项目 ID 前缀，避免后续请求因 ID 校验失败。
+- 邮箱换绑：支持别名占用检测并增加事务级并发保护，避免并发换绑导致重复绑定。
+- Antigravity：将兼容模式最大 token 限制为 64000，避免超出上游限制。
+- 频道监控 v2：修复 composite 平台错误聚合的 SQL 条件，确保监控统计归属正确。
 
 
 
@@ -26,10 +29,10 @@ v0.1.181
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.181
+docker pull weishaw/sub2api:0.1.183
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.181
+docker pull ghcr.io/wei-shaw/sub2api:0.1.183
 ```
 
 **One-line install (Linux):**

@@ -2,23 +2,45 @@
 
 # Version
 
-v0.1.183
+v0.1.184
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-本版本集中修复 OpenAI、Kimi、Antigravity、邮箱绑定及频道监控等场景的调度、会话与兼容性问题，提升请求成功率和账号状态判断准确性。
+完善 Codex 路由模型目录与能力同步，新增多项账号、用量统计及网关稳定性改进。
+
+## 新增功能
+
+- Codex 路由模型目录：支持按实际路由展示模型及能力，并支持精确账号模型别名。
+- 用量记录：新增原生 compaction 请求统计，并展示映射前的推理强度。
+- 公共分组访问控制：管理员可限制用户可访问的公共分组。
+- 新增智谱团队 GLM Coding Plan 用量查询。
+- Ollama Cloud 用量窗口支持挂载到国产三家平台账号。
+- OpenAI 图像工具冷却策略支持后台配置。
+- TTFT 指标模式调整为管理员可配置。
+
+## 优化改进
+
+- 优化 Codex 模型目录缓存、能力同步及模型发现策略。
+- 优化 OpenAI 多渠道 service tier 传递、计费和配额重置处理。
+- 优化账号过期时间的本地时区解析与展示。
+- 优化上游倍率探测，避免触发账号列表整页刷新。
+- 优化 DeepSeek 高峰/非高峰计费价格。
+- 优化 WebSocket、消息粘性会话及大请求转发处理。
+- 优化图像能力异常账号的调度冷却，减少重复选中不可用账号。
 
 ## Bug 修复
 
-- OpenAI OAuth：识别 5 小时/7 天配额耗尽的 429，并按重置时间暂停账号；普通瞬时 429 继续重试。
-- Kimi：并发限制 403 改为临时冷却并保留故障转移，避免误将账号永久禁用。
-- OpenAI：支持 Codex `session-id` 请求头，保持重连请求的粘性会话；容量溢出时不迁移持久绑定。
-- OpenAI Responses：修正 custom tool/tool search 调用恢复后的项目 ID 前缀，避免后续请求因 ID 校验失败。
-- 邮箱换绑：支持别名占用检测并增加事务级并发保护，避免并发换绑导致重复绑定。
-- Antigravity：将兼容模式最大 token 限制为 64000，避免超出上游限制。
-- 频道监控 v2：修复 composite 平台错误聚合的 SQL 条件，确保监控统计归属正确。
+- 修复 Anthropic 转 Responses 流式输出时 thinking 内容块顺序及索引问题。
+- 修复 Anthropic/Bedrock 传输层错误未正确触发故障转移的问题。
+- 修复 Grok Responses 工具输出、无效工具联合类型及图像工具结果处理问题。
+- 修复 OpenAI 流式失败、配额重置和客户端正常断开时的错误判定。
+- 修复 OAuth 重新授权及 OAuth 注册优惠码保留问题。
+- 修复 SMTP TLS 测试接口覆盖已保存配置的问题。
+- 修复支付回调相对地址及充值汇率币种展示问题。
+- 修复渠道定价对带后缀模型名的计费覆盖问题。
+- 修复 Claude 归因请求头及 Anthropic 工具参数透传问题。
 
 
 
@@ -29,10 +51,10 @@ v0.1.183
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.183
+docker pull weishaw/sub2api:0.1.184
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.183
+docker pull ghcr.io/wei-shaw/sub2api:0.1.184
 ```
 
 **One-line install (Linux):**

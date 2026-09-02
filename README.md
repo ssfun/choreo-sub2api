@@ -2,45 +2,34 @@
 
 # Version
 
-v0.1.184
+v0.1.185
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-完善 Codex 路由模型目录与能力同步，新增多项账号、用量统计及网关稳定性改进。
+升级价格目录与长上下文计费体系，并增强 Codex/OpenAI 网关兼容性和连接稳定性。
 
 ## 新增功能
 
-- Codex 路由模型目录：支持按实际路由展示模型及能力，并支持精确账号模型别名。
-- 用量记录：新增原生 compaction 请求统计，并展示映射前的推理强度。
-- 公共分组访问控制：管理员可限制用户可访问的公共分组。
-- 新增智谱团队 GLM Coding Plan 用量查询。
-- Ollama Cloud 用量窗口支持挂载到国产三家平台账号。
-- OpenAI 图像工具冷却策略支持后台配置。
-- TTFT 指标模式调整为管理员可配置。
+- 价格目录支持通过 `pricing.override_file` 使用 JSON 补丁覆盖官方价格数据。
+- 长上下文阶梯计价改为由价格目录驱动，支持不同模型和渠道的动态定价策略。
+- Codex 快速模型支持展示 priority service tier。
 
 ## 优化改进
 
-- 优化 Codex 模型目录缓存、能力同步及模型发现策略。
-- 优化 OpenAI 多渠道 service tier 传递、计费和配额重置处理。
-- 优化账号过期时间的本地时区解析与展示。
-- 优化上游倍率探测，避免触发账号列表整页刷新。
-- 优化 DeepSeek 高峰/非高峰计费价格。
-- 优化 WebSocket、消息粘性会话及大请求转发处理。
-- 优化图像能力异常账号的调度冷却，减少重复选中不可用账号。
+- 优化账号统计成本计算，统一应用模型定价策略及 DeepSeek 峰谷价格。
+- 优化数据库启动时的瞬时错误重试机制，提升服务启动稳定性。
+- 优化 OpenAI WebSocket 连接池，自动回收过期空闲连接。
+- 优化 Codex 模型能力目录，保留已知的图像输入能力。
+- 优化 Gemini Pro 缓存写入价格及价格目录契约校验。
 
 ## Bug 修复
 
-- 修复 Anthropic 转 Responses 流式输出时 thinking 内容块顺序及索引问题。
-- 修复 Anthropic/Bedrock 传输层错误未正确触发故障转移的问题。
-- 修复 Grok Responses 工具输出、无效工具联合类型及图像工具结果处理问题。
-- 修复 OpenAI 流式失败、配额重置和客户端正常断开时的错误判定。
-- 修复 OAuth 重新授权及 OAuth 注册优惠码保留问题。
-- 修复 SMTP TLS 测试接口覆盖已保存配置的问题。
-- 修复支付回调相对地址及充值汇率币种展示问题。
-- 修复渠道定价对带后缀模型名的计费覆盖问题。
-- 修复 Claude 归因请求头及 Anthropic 工具参数透传问题。
+- 修复 API Key 请求被错误合成 instructions 的问题。
+- 修复 Codex 模型目录中持续禁用账号仍被选中的问题。
+- 修复 ctx_pool WebSocket 入口未改写上游容量降载错误码，避免客户端错误终止会话。
+- 修复 OpenAI delegation bootstrap 缺少 call id 时无法正常处理的问题。
 
 
 
@@ -51,10 +40,10 @@ v0.1.184
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.184
+docker pull weishaw/sub2api:0.1.185
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.184
+docker pull ghcr.io/wei-shaw/sub2api:0.1.185
 ```
 
 **One-line install (Linux):**

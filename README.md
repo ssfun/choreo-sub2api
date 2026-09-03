@@ -2,34 +2,33 @@
 
 # Version
 
-v0.1.185
+v0.2.0
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-升级价格目录与长上下文计费体系，并增强 Codex/OpenAI 网关兼容性和连接稳定性。
+新增 OpenAI Fast 分组策略、按模型配置 reasoning effort，以及 Kimi 原生 Responses API 转发支持。
 
 ## 新增功能
 
-- 价格目录支持通过 `pricing.override_file` 使用 JSON 补丁覆盖官方价格数据。
-- 长上下文阶梯计价改为由价格目录驱动，支持不同模型和渠道的动态定价策略。
-- Codex 快速模型支持展示 priority service tier。
+- 分组支持配置 OpenAI Fast，并支持将免费 Fast 请求按 Standard 价格计费
+- 支持按模型设置 OpenAI reasoning effort 映射，并可配置超限时拒绝或降级
+- 支持转发 Kimi 原生 OpenAI Responses API
+- 支持 Claude Fable 5.1
+- 支持没有 call ID 的定时自动化启动请求
 
 ## 优化改进
 
-- 优化账号统计成本计算，统一应用模型定价策略及 DeepSeek 峰谷价格。
-- 优化数据库启动时的瞬时错误重试机制，提升服务启动稳定性。
-- 优化 OpenAI WebSocket 连接池，自动回收过期空闲连接。
-- 优化 Codex 模型能力目录，保留已知的图像输入能力。
-- 优化 Gemini Pro 缓存写入价格及价格目录契约校验。
+- 优化分组模型定价弹窗布局
+- 保留调度器快照中的 OpenAI passthrough 配置
+- 改进 OpenAI API Key 对话缓存身份处理
 
 ## Bug 修复
 
-- 修复 API Key 请求被错误合成 instructions 的问题。
-- 修复 Codex 模型目录中持续禁用账号仍被选中的问题。
-- 修复 ctx_pool WebSocket 入口未改写上游容量降载错误码，避免客户端错误终止会话。
-- 修复 OpenAI delegation bootstrap 缺少 call id 时无法正常处理的问题。
+- 修复 WebSocket 在收到 terminal event 前关闭时的处理问题
+- 修复模型级冷却导致 `model_not_found` 被错误转换为 `429` 的问题
+- 修复未启用 server-side-fallback beta 时仍透传 Anthropic fallback 的问题
 
 
 
@@ -40,10 +39,10 @@ v0.1.185
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.1.185
+docker pull weishaw/sub2api:0.2.0
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.1.185
+docker pull ghcr.io/wei-shaw/sub2api:0.2.0
 ```
 
 **One-line install (Linux):**

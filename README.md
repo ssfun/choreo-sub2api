@@ -2,33 +2,52 @@
 
 # Version
 
-v0.2.0
+v0.2.1
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 OpenAI Fast 分组策略、按模型配置 reasoning effort，以及 Kimi 原生 Responses API 转发支持。
+新增 GPT-6 Astra、Codex Ultrafast 服务层级及多项网关能力，提升 OpenAI、Claude、Gemini 和图片生成场景的兼容性与稳定性。
 
 ## 新增功能
 
-- 分组支持配置 OpenAI Fast，并支持将免费 Fast 请求按 Standard 价格计费
-- 支持按模型设置 OpenAI reasoning effort 映射，并可配置超限时拒绝或降级
-- 支持转发 Kimi 原生 OpenAI Responses API
-- 支持 Claude Fable 5.1
-- 支持没有 call ID 的定时自动化启动请求
+- OpenAI：支持 GPT-6 Astra 模型及能力同步、消息提示缓存
+- Codex：支持 Ultrafast 服务层级和固定账号模型清单
+- Claude：支持配置对外展示的 CLI 版本
+- 图片生成：支持将上游图片 URL 下载并回填为 `b64_json`
+- 用量记录：保存上游请求标识，并支持按账户配置响应头名称
+- 定价：支持 Anthropic reasoning effort 定价控制及定价文件热加载
+- 推理映射：支持将 `none` 作为 reasoning 映射来源
 
 ## 优化改进
 
-- 优化分组模型定价弹窗布局
-- 保留调度器快照中的 OpenAI passthrough 配置
-- 改进 OpenAI API Key 对话缓存身份处理
+- 管理端账户列表支持紧凑响应，减少返回数据量
+- 前端侧边栏支持在子路由激活时折叠分组
+- 网关调度补充渠道模型限制的逐账号检查
+- WebSocket 重放正文改为共享不可变数据，降低长会话内存开销
+- 记忆被上游拒绝的加密内容，避免后续轮次重复恢复
 
 ## Bug 修复
 
-- 修复 WebSocket 在收到 terminal event 前关闭时的处理问题
-- 修复模型级冷却导致 `model_not_found` 被错误转换为 `429` 的问题
-- 修复未启用 server-side-fallback beta 时仍透传 Anthropic fallback 的问题
+- 修复 Claude 计费指纹与出站 User-Agent 不一致
+- 修复 OpenAI 模型列表不可用时丢失已有能力
+- 修复 OpenAI Astra 能力和续聊状态未持久化
+- 修复图片 URL 回填时访问私网地址及内容类型校验问题
+- 修复 WebSocket 多路径下未记录 cyber policy 失败
+- 修复上游请求标识记录不完整
+- 修复 Gemini 自定义原生模型列表未生效
+- 修复聊天回退时已发现工具丢失
+- 修复 OpenCode 会话转发范围错误
+- 修复 GLM-5.3 thinking effort 参数规范化
+- 修复自动化 heartbeat bootstrap 处理
+- 修复支付宝订单回调延迟导致订单长期待支付
+- 修复转发失败后会话槽未及时释放
+- 修复不可用 continuation 响应恢复
+- 修复 API Key 透传时 reasoning effort 丢失
+- 修复历史任务委派续聊兼容性
+- 修复负载感知调度中的模型映射账号选择
+- 修复上游错误代理归因和网关准入拒绝识别
 
 
 
@@ -39,10 +58,10 @@ v0.2.0
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.0
+docker pull weishaw/sub2api:0.2.1
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.0
+docker pull ghcr.io/wei-shaw/sub2api:0.2.1
 ```
 
 **One-line install (Linux):**

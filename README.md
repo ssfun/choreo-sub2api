@@ -2,52 +2,21 @@
 
 # Version
 
-v0.2.1
+v0.2.3
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 GPT-6 Astra、Codex Ultrafast 服务层级及多项网关能力，提升 OpenAI、Claude、Gemini 和图片生成场景的兼容性与稳定性。
-
-## 新增功能
-
-- OpenAI：支持 GPT-6 Astra 模型及能力同步、消息提示缓存
-- Codex：支持 Ultrafast 服务层级和固定账号模型清单
-- Claude：支持配置对外展示的 CLI 版本
-- 图片生成：支持将上游图片 URL 下载并回填为 `b64_json`
-- 用量记录：保存上游请求标识，并支持按账户配置响应头名称
-- 定价：支持 Anthropic reasoning effort 定价控制及定价文件热加载
-- 推理映射：支持将 `none` 作为 reasoning 映射来源
-
-## 优化改进
-
-- 管理端账户列表支持紧凑响应，减少返回数据量
-- 前端侧边栏支持在子路由激活时折叠分组
-- 网关调度补充渠道模型限制的逐账号检查
-- WebSocket 重放正文改为共享不可变数据，降低长会话内存开销
-- 记忆被上游拒绝的加密内容，避免后续轮次重复恢复
+修复升级后 groups.model_allowlist 列缺失导致密钥/订阅页面 500 的问题，并补齐 Ollama Cloud 下 DeepSeek 模型在 Messages / Responses 协议的输出上限与鉴权处理。
 
 ## Bug 修复
 
-- 修复 Claude 计费指纹与出站 User-Agent 不一致
-- 修复 OpenAI 模型列表不可用时丢失已有能力
-- 修复 OpenAI Astra 能力和续聊状态未持久化
-- 修复图片 URL 回填时访问私网地址及内容类型校验问题
-- 修复 WebSocket 多路径下未记录 cyber policy 失败
-- 修复上游请求标识记录不完整
-- 修复 Gemini 自定义原生模型列表未生效
-- 修复聊天回退时已发现工具丢失
-- 修复 OpenCode 会话转发范围错误
-- 修复 GLM-5.3 thinking effort 参数规范化
-- 修复自动化 heartbeat bootstrap 处理
-- 修复支付宝订单回调延迟导致订单长期待支付
-- 修复转发失败后会话槽未及时释放
-- 修复不可用 continuation 响应恢复
-- 修复 API Key 透传时 reasoning effort 丢失
-- 修复历史任务委派续聊兼容性
-- 修复负载感知调度中的模型映射账号选择
-- 修复上游错误代理归因和网关准入拒绝识别
+- 修复数据库回滚旧结构后升级不自愈，导致「API 密钥」「我的订阅」「管理端订阅列表」等页面加载失败的问题（新增可重放收敛迁移 236）
+- 修复挂载在 Ollama Cloud 下的 DeepSeek 模型请求在 Anthropic Messages 与原生 /v1/responses 路径未压制输出上限，被上游以 400 拒绝的问题
+- 修复 Ollama Cloud base URL 带尾部斜杠时输出上限压制失效的问题
+- 修复 Anthropic 兼容入口指向 Ollama Cloud 时未自动使用 Bearer 鉴权导致认证失败的问题
+- 修复 OpenAI OAuth / API Key 账号连接测试的模型下拉列表显示为空白的问题
 
 
 
@@ -58,10 +27,10 @@ v0.2.1
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.1
+docker pull weishaw/sub2api:0.2.3
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.1
+docker pull ghcr.io/wei-shaw/sub2api:0.2.3
 ```
 
 **One-line install (Linux):**

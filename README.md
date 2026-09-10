@@ -2,21 +2,53 @@
 
 # Version
 
-v0.2.3
+v0.2.4
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-修复升级后 groups.model_allowlist 列缺失导致密钥/订阅页面 500 的问题，并补齐 Ollama Cloud 下 DeepSeek 模型在 Messages / Responses 协议的输出上限与鉴权处理。
+新增 MiniMax 平台接入，并为长时间生成的流式请求加入 HTTP/2 PING 保活，改善长任务断流问题。
+
+## 新增功能
+
+- MiniMax 平台支持：新增账号类型、分组调度、渠道监控与额度监控完整接线
+- OpenAI 生图支持 Image 2.5 模型
+- Grok 媒体能力资格控制：可在账号维度配置媒体调用资格
+- 长流保活：为长时间生成的上游流式请求启用 HTTP/2 PING 保活
+- 账号列表新增 OpenAI 预估周消耗展示
+- 渠道监控 V2 新增用户排行显隐开关，可对非管理员隐藏排行榜
+- 支付帮助文案支持 Markdown 渲染（已做净化处理）
+- 自定义页面的打开链接按钮支持拖拽调整位置
+- 部署支持自定义 Apple 容器网络子网
+
+## 优化改进
+
+- 系统日志入库量收敛上限，避免数据库无限增长
+- 渠道缓存失效改为集群广播，多实例部署下配置变更即时生效
+- 账号调度以持久化冷却时间为准，自动丢弃过期的进程内运行时封锁
+- 客户端断开后先取消上游流再关闭连接，并正确归类被取消的流
+- 渠道监控中缺失首字延迟样本不再显示为异常，改为「不适用」状态
 
 ## Bug 修复
 
-- 修复数据库回滚旧结构后升级不自愈，导致「API 密钥」「我的订阅」「管理端订阅列表」等页面加载失败的问题（新增可重放收敛迁移 236）
-- 修复挂载在 Ollama Cloud 下的 DeepSeek 模型请求在 Anthropic Messages 与原生 /v1/responses 路径未压制输出上限，被上游以 400 拒绝的问题
-- 修复 Ollama Cloud base URL 带尾部斜杠时输出上限压制失效的问题
-- 修复 Anthropic 兼容入口指向 Ollama Cloud 时未自动使用 Bearer 鉴权导致认证失败的问题
-- 修复 OpenAI OAuth / API Key 账号连接测试的模型下拉列表显示为空白的问题
+- 修复 OAuth 账号生图时主控模型选择错误
+- 修复 Grok Chat Completions 传入不支持的 external_web_access 参数导致请求失败
+- 修复 429 未耗尽额度时仍触发账号退避，关闭默认回避时不再创建 OAuth 冷却
+- 修复 Claude Code max_tokens=1 探测请求在部分模型上被拒绝
+- 修复代理更新时未提交字段被清空，保留过期时间与回退设置
+- 修复代理备份引用方向错误且无法共享的问题
+- 修复代理过期回退只能触发一次的问题
+- 修复公告与代理的日期范围缺少校验
+- 修复代理列表返回异常数据时页面报错
+- 修复模型广场未包含生效中的订阅分组
+- 修复注册可见性设置在登录页未生效
+- 修复账号无法移除已停用分组的问题
+- 修复令牌刷新失败的账号在列表中丢失选中状态
+- 修复 Antigravity OAuth 账号创建时订阅套餐信息丢失
+- 修复账号操作菜单超出视口显示不全
+- 修复 Windows 下插件 ZIP 包未关闭导致的提交失败
+- 升级 go-redis 至 v9.22.0，修复连接池 nil-ctx panic
 
 
 
@@ -27,10 +59,10 @@ v0.2.3
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.3
+docker pull weishaw/sub2api:0.2.4
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.3
+docker pull ghcr.io/wei-shaw/sub2api:0.2.4
 ```
 
 **One-line install (Linux):**

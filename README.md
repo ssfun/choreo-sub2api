@@ -2,48 +2,40 @@
 
 # Version
 
-v0.2.8
+v0.2.9
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-本版本新增 GPT-6 Sol/Luna、Claude Opus 5.5、Grok 4.7 等模型支持，并接入 OpenCode Go 官方用量窗口查询与自动刷新。
+本版本以稳定性与计费准确性修复为主，覆盖 Anthropic、OpenAI/Codex、Antigravity 等多个上游的兼容性问题；模型分组白名单新增通配符位置匹配。
 
 ## 新增功能
 
-- 新增模型支持：GPT-6 Sol、GPT-6 Luna、Claude Opus 5.5、Grok 4.7
-- OpenCode Go 用量窗口：支持官方用量查询、自动刷新、同 Key 组共享与主动查询，账号列表/单元格展示余额（7d/1m 徽章）
-- 计费：支持按推理力度（reasoning effort）配置计费倍率
-- 自动同步 Claude Code 客户端版本号
-- 简易模式：可选启用 API Key 消费窗口限制；启动时默认分组创建改为可选
-- 备份：支持月度归档与独立保留策略
-- 联盟推广：提现记录支持登记线下提现
-- 日志：支持配置滚动日志保留策略
-- Codex：展示 Codex 积分并管理推荐邀请
-- 内容审计：新增独立 TypeSafe 引擎配置档
-- 插件：HostService 账号目录返回结构化只读元数据
+- 模型分组白名单支持通配符位置匹配（glob）
 
 ## 优化改进
 
-- 工具调用：清洗工具 Schema 中非法的 null required、prefixItems/元组数组，避免上游 400
-- Antigravity：裸 Gemini 模型名在所有转发入口解析到思考变体；系统提示词中和 Claude Agent SDK 身份避免 429；为 Gemini 分组列出混合 Antigravity 模型
-- 调度：非高级调度按 previous_response 路由到持有响应的账号并补齐决策标签；调度倍率补充账号倍率回退；账号 RPM 配置保留在调度投影中
-- 上游连接：流式在终止事件即结束不再等待上游 EOF；恢复 OpenAI HTTP/2 保活容错期限；关闭响应体前先取消响应尝试
-- 视频计费按秒展示；管理端平台配额编辑器与支持的平台对齐
+- OpenAI 透传账号可补充模型发现，不再隐藏已映射的模型
+- 自动重置额度：跳过已确认无额度的账号，并在查询失败后自动退避
+- 安装向导移除过时的限流默认配置
+- Redis 启动命令改用 exec 列表形式，改善容器优雅关闭
 
 ## Bug 修复
 
-- OpenCode/Command Code：修复 Cloudflare 1010 误将账号禁用；归一化 /zen/go 变体配额端点；账号更新时保留用量状态与自动刷新
-- OpenAI/Codex：透传时选图尊重直通；测试选号按模型映射过滤并保留 OAuth 图像别名；剥离超长 input item ID；改写 Codex turn metadata 保留非 ASCII 转义；Codex base URL 补齐 /v1；DeepSeek Responses input_image 以 url 别名；保留携带 Responses Lite 标记的 GPT-5.5 请求；按 error.status 分类流内失败；流式协议错误只发一次
-- 计费/定价：跨转发路径保留最终推理力度；解析 token 边界的科学计数法
-- 订阅/代理/备份：兑换扣减保留不足一天余量并加锁负向更新；按日历日展示到期标签；回退恢复时失效计费探针、跳过失效回退目标、忽略过期快照到期写入、正确标记新过期代理；月度归档关闭后不改写旧归档保留份数；继承保存时保持 S3 密钥加密
-- 网关：恢复公开响应模型别名；识别 Baseten 推理预算错误；Gemini 传输层错误转 failover 不再同账号退避；Vertex 429 冷却至 PST 午夜并遵循 RetryInfo；Grok 冷却期间允许配额查询
-- 图像：保留余额不足失败；兼容的 Gemini 图像模型经 API Key 路由
-- 审核：防止提醒标签绕过关键词检查；处理尾随 Anthropic system 消息
-- 联盟/支付：线下提现登记按 Idempotency-Key 幂等；去除支付回调基础 URL 尾部斜杠
-- 账号：OAuth 重新授权保留设置；临时不可调度状态限定于当前账号；API Key 账号对未知模型仍可用；选号读取分组时不再聚合账号数
-- 管理后台/前端：修复多项列表/对话框的过期请求覆盖、IME 输入、日期选择、下拉高亮、失败重试与就地状态更新等交互问题
+- Anthropic：保留请求中的结构化输出 beta 头
+- OpenAI 桥接：尊重客户端禁用 thinking 的设置
+- OpenAI：保留 Responses 多智能体 beta；上下文 rollover 时断开 websocket 链
+- OpenAI：探测模型缺失时保持 Responses 支持状态未知；alpha search 回退需成功完成后才计费
+- OpenAI 额度暂停保留到已知的未来重置时间；自动重置字段保留在调度器投影中
+- apicompat：将 GPT-5 及以后代际统一识别为推理模型；最终输出消息为空时恢复流式文本；保留 content_block_start 上发送的工具参数；转换的角色项正确标记为 messages
+- Antigravity：MALFORMED_FUNCTION_CALL 导致空流时触发 failover 重试；转发聊天 PDF 为 Gemini inlineData；保留工具 schema 的 string const 约束；有意义数据检查排除仅 Signature 事件
+- OpenCode Zen 上游注入 DeepSeek reasoning 占位符
+- 计费：识别 OpenRouter Claude Opus 5.5 别名；账号统计定价遵守长上下文门控；渠道未设价时继承目录图片价；模型广场应用独立视频计费倍率；Free Fast 无定价时保留零成本用量日志
+- 网关：客户端断开统一标记为 499，不再被误记为 502/200 上游错误
+- UI：空闲用量窗口在有已知重置时间时显示倒计时；分组模态框清理监听器与挂起的搜索
+- ccswitch：修复 usage 查询请求 /v1/v1/usage 的路径重复；保留 Codex provider 根端点
+- Windows 下 Codex 模型目录路径使用 ~/
 
 
 
@@ -54,10 +46,10 @@ v0.2.8
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.8
+docker pull weishaw/sub2api:0.2.9
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.8
+docker pull ghcr.io/wei-shaw/sub2api:0.2.9
 ```
 
 **One-line install (Linux):**

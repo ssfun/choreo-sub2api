@@ -2,40 +2,33 @@
 
 # Version
 
-v0.2.9
+v0.2.10
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-本版本以稳定性与计费准确性修复为主，覆盖 Anthropic、OpenAI/Codex、Antigravity 等多个上游的兼容性问题；模型分组白名单新增通配符位置匹配。
+新增支持 Claude Sonnet 5.5 模型，并为账号管理增加原生重置额度状态查询与风控用户白名单等能力。
 
 ## 新增功能
 
-- 模型分组白名单支持通配符位置匹配（glob）
+- 支持 Claude Sonnet 5.5 模型
+- Claude 账号原生重置额度查询：在账号页按需查看重置额度次数、可用状态与到期时间
+- 风控用户白名单：支持配置豁免内容审计/风控策略的用户名单
+- 仪表盘近期用量支持在 Token 用量与消费金额之间切换展示
+- 仅限 Claude Code 的分组自动隐藏不支持的客户端标签
 
 ## 优化改进
 
-- OpenAI 透传账号可补充模型发现，不再隐藏已映射的模型
-- 自动重置额度：跳过已确认无额度的账号，并在查询失败后自动退避
-- 安装向导移除过时的限流默认配置
-- Redis 启动命令改用 exec 列表形式，改善容器优雅关闭
+- OpenAI 分组的密钥使用弹窗不再展示无关的 Codex 模型目录
 
 ## Bug 修复
 
-- Anthropic：保留请求中的结构化输出 beta 头
-- OpenAI 桥接：尊重客户端禁用 thinking 的设置
-- OpenAI：保留 Responses 多智能体 beta；上下文 rollover 时断开 websocket 链
-- OpenAI：探测模型缺失时保持 Responses 支持状态未知；alpha search 回退需成功完成后才计费
-- OpenAI 额度暂停保留到已知的未来重置时间；自动重置字段保留在调度器投影中
-- apicompat：将 GPT-5 及以后代际统一识别为推理模型；最终输出消息为空时恢复流式文本；保留 content_block_start 上发送的工具参数；转换的角色项正确标记为 messages
-- Antigravity：MALFORMED_FUNCTION_CALL 导致空流时触发 failover 重试；转发聊天 PDF 为 Gemini inlineData；保留工具 schema 的 string const 约束；有意义数据检查排除仅 Signature 事件
-- OpenCode Zen 上游注入 DeepSeek reasoning 占位符
-- 计费：识别 OpenRouter Claude Opus 5.5 别名；账号统计定价遵守长上下文门控；渠道未设价时继承目录图片价；模型广场应用独立视频计费倍率；Free Fast 无定价时保留零成本用量日志
-- 网关：客户端断开统一标记为 499，不再被误记为 502/200 上游错误
-- UI：空闲用量窗口在有已知重置时间时显示倒计时；分组模态框清理监听器与挂起的搜索
-- ccswitch：修复 usage 查询请求 /v1/v1/usage 的路径重复；保留 Codex provider 根端点
-- Windows 下 Codex 模型目录路径使用 ~/
+- 修复复合（composite）分组在旧版调度与 WebSocket 别名下的模型归属与路由问题
+- 修复流式请求的用量转发与统计不准确问题（含 Anthropic 用量归一化与缓存输入扣减）
+- 修复 Antigravity 兼容流在首个内容返回前可能提前中断的问题
+- 修复账号模型白名单与模型映射产生冲突的问题
+- 修复请求中含多个工具时工具名改写可能破坏请求体的问题
 
 
 
@@ -46,10 +39,10 @@ v0.2.9
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.9
+docker pull weishaw/sub2api:0.2.10
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.9
+docker pull ghcr.io/wei-shaw/sub2api:0.2.10
 ```
 
 **One-line install (Linux):**

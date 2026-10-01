@@ -2,33 +2,35 @@
 
 # Version
 
-v0.2.10
+v0.2.11
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增支持 Claude Sonnet 5.5 模型，并为账号管理增加原生重置额度状态查询与风控用户白名单等能力。
+新增 GPT-6.1 Sol 模型支持和 Claude 原生限额重置兑换；余额模式新增在途额度预占，防止并发请求导致透支。
 
 ## 新增功能
 
-- 支持 Claude Sonnet 5.5 模型
-- Claude 账号原生重置额度查询：在账号页按需查看重置额度次数、可用状态与到期时间
-- 风控用户白名单：支持配置豁免内容审计/风控策略的用户名单
-- 仪表盘近期用量支持在 Token 用量与消费金额之间切换展示
-- 仅限 Claude Code 的分组自动隐藏不支持的客户端标签
+- 支持 GPT-6.1 Sol 模型（含定价、模型目录与各兼容入口转换）
+- Claude 账号支持兑换原生限额重置：查询到可兑换额度后，可在账号列表中经二次确认一键重置
+- 使用密钥弹窗的 Codex 配置支持远程模型目录（Codex 0.156.0+），旧版客户端仍可选择本地文件模式
+- 识别 ChatGPT 最新订阅套餐类型，账号套餐标签显示更准确
+- 新增 API Key 创建数量与频率限制：每用户最多 200 个有效 Key、每小时最多创建 60 次（可配置，0 表示不限制）
 
 ## 优化改进
 
-- OpenAI 分组的密钥使用弹窗不再展示无关的 Codex 模型目录
+- 支持 Astra Ultrafast 模型的能力识别与计费
+- 开启「仅限 Claude Code」并配置了降级分组的分组，其 OpenAI 兼容入口（Chat Completions / Responses）改走降级分组，不再直接返回 403
 
 ## Bug 修复
 
-- 修复复合（composite）分组在旧版调度与 WebSocket 别名下的模型归属与路由问题
-- 修复流式请求的用量转发与统计不准确问题（含 Anthropic 用量归一化与缓存输入扣减）
-- 修复 Antigravity 兼容流在首个内容返回前可能提前中断的问题
-- 修复账号模型白名单与模型映射产生冲突的问题
-- 修复请求中含多个工具时工具名改写可能破坏请求体的问题
+- 修复余额模式下多个高成本请求并发时可能透支余额的问题：请求准入时按预估成本预占在途额度，计费完成后释放
+
+## 破坏性变更
+
+- API Key 创建限制默认开启：单用户有效 Key 超过 200 个或一小时内创建超过 60 次时，将无法继续创建。如需调整，修改配置 `api_key_create.max_active_per_user` / `api_key_create.max_per_user_per_hour`（设为 0 表示不限制）
+- 余额在途预占默认开启：余额较低的用户在并发请求时，可能比以前更早被拒绝。可通过 `billing.inflight_reservation` 配置关闭或调整
 
 
 
@@ -39,10 +41,10 @@ v0.2.10
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.10
+docker pull weishaw/sub2api:0.2.11
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.10
+docker pull ghcr.io/wei-shaw/sub2api:0.2.11
 ```
 
 **One-line install (Linux):**

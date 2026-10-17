@@ -2,51 +2,52 @@
 
 # Version
 
-v0.2.16
+v0.2.17
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-Gemini 支持显式上下文缓存（AI Studio / Vertex / 自建网关上游），并新增 Claude Haiku 5.5 模型适配。
+Antigravity / Gemini 支持 Gemini 4 Argon（含计费与上游模型目录同步），Gemini 兼容入口支持思考档位与流式思考摘要；同时集中修复支付退款、易支付查单等多处资金链路问题。
 
 ## 新增功能
 
-- Claude Haiku 5.5：全链路适配模型注册、推理强度、定价与计费，并接入 Responses 桥接
-- Gemini 显式上下文缓存：支持创建、续期、删除缓存，内置官方存储价并按 Pro / Flash 系列兜底，存储费按 API Key 额度与订阅额度预留校验
-- Gemini Vertex（Agent Platform）：支持 API Key 认证，服务账号支持同步上游模型列表，模型列表与详情接口支持 Vertex 账号
-- Gemini AI Studio：适配新的 AQ. 格式 Key
-- 临时不可调度规则新增作用范围选项：可选择命中后暂停整个账号或只冷却当前模型，未设置的存量规则行为不变
-- 分组名称与描述支持多语言
-- 运维请求详情表新增账号名称列
+- Gemini 4 Argon：Antigravity、Gemini API、Gemini CLI 支持 gemini-4-argon（low/medium/high），并补齐计费价格
+- Antigravity 模型目录：同步上游模型目录时按账号实际端点拉取，并保存上下文窗口、图像输入、思考等能力信息
+- Gemini 兼容入口思考档位：chat/messages 兼容入口转发 reasoning_effort / thinking 为 Gemini 思考配置，流式返回思考摘要
+- 最小输出 token 可配置：新增 gateway.min_output_tokens（默认 128，最低 16），作用于各协议转换路径
+- OpenAI API Key 账号支持 Web Search 模拟：Claude Code 走 OpenAI 分组的 /v1/messages 也可启用 web_search 模拟
 
 ## 优化改进
 
-- GPT-6.1 Sol 订阅账号不再收取长上下文附加费
-- GPT-6.1 Sol 生成上下文默认值提升至 500k
-- Gemini 3.6 Flash 兜底价改为官方优惠价
-- 第三方上游 API Key 与 Vertex 账号不再套用 AI Studio 等级和模拟配额
-- Vertex 显示名改为 Agent Platform (Vertex)
-- Kimi 国际版 Coding 端点（api.kimi.ai）支持配额查询
+- Vertex 共享容量不足的 429 不再冷却账号，改为同号退避重试，避免绑定显式缓存的请求直接 503
+- Vertex 服务账号已被删除时将账号置为 error 并换号，不再持续调度返回 502
+- 账号管理页恢复筛选项直接平铺展示，并优化窄屏布局
 
 ## Bug 修复
 
-- 修复上游拒绝结构化输入时 Chat 回退重试的问题，并保留 Responses 语义、避免不安全重试
-- 修复 Kimi / DeepSeek / MiniMax 等非 OpenAI 账号被注入 Codex 图像生成桥接导致 400 的问题
-- 修复 Gemini 引用不存在的缓存返回 403 时账号被停用并换号的问题
-- 修复 Gemini 工具结果中的图片丢失问题
-- 修复 Antigravity 图像模型限流影响同账号其他模型的问题
-- 修复显式模型级 401 规则在故障转移、计数、Bedrock 等入口未生效、仍整号置错的问题
-- 修复 Gemini 原生路由网关本地错误在运维中的归类问题
-- 修复 Gemini 授权链接生成失败时错误信息丢失的问题
-- 修复同步上游模型失败时未显示后端错误原因的问题
-- 修复风控审核范围中残留已删除分组的问题
-- 修复分组 RPM 覆盖加载过期数据的问题，并拒绝非正数的倍率修改
-- 修复支付二维码倒计时漂移、用量倒计时切回标签页不刷新的问题
-- 修复渠道监控 v2 设置无法添加缺失平台、自动刷新不更新缓存可用性的问题
-- 修复运维自定义时间范围未按本地时区初始化的问题
-- 修复下拉选择框在输入法组字时键盘输入被打断的问题
-- 修复账号列表中分组名称显示不全的问题
+- 修复易支付（彩虹易支付 / ZPay）查单参数无法被识别、数字字符串解析失败的问题，回调确认后再入账
+- 修复退款处理中余额/订阅扣减时机问题：退款待定期间保留扣减，网关确认失败后原子回退
+- 修复支付宝退款无法查询状态的问题，查询异常保持待定、未找到记录延迟判定失败
+- 修复不支持的订单类型导致支付回调无法确认的问题，下单时校验订单类型
+- 修复 Stripe 支付页 client_secret 经 URL 传递的问题，改为从本地订单快照读取
+- 修复 GPT-5.5 退役后仍向 ChatGPT 订阅账号调度和展示该模型的问题（API Key 账号不受影响）
+- 修复 Responses 对象缺少 created_at 导致 grok-build 等客户端反序列化失败的问题
+- 修复 composite 分组模型归属歧义时 OpenAI OAuth 凭据可能误入 Anthropic 管线的问题
+- 修复自适应账号在原生 Anthropic 网关和 count_tokens 路径忽略 Anthropic 协议 base URL 的问题
+- 修复同一用户多个 Codex 工作区导入时互相覆盖的问题
+- 修复 Antigravity 丢失 tool_result 内图片、原生 Gemini functionCall/thoughtSignature，以及 composite 分组 /v1beta 路由被拒的问题
+- 修复 Antigravity Claude 5.5 档位模型按子串匹配被超额计费的问题，并保留旧版默认模型透传
+- 修复 Gemini 首次 401 在同一请求内被重复判定导致账号直接停用的问题
+- 修复智谱 GLM Coding Plan 5 小时/每周用量窗口标反的问题
+
+## 破坏性变更
+
+- GPT-5.5 订阅退役：ChatGPT OAuth / SetupToken 账号不再调度 gpt-5.5，模型列表中也不再展示；若无可用账号，请求返回 model_not_found。API Key 账号不受影响
+
+## 升级指南
+
+- 使用 ChatGPT 订阅账号承接 gpt-5.5 的站点，请检查账号模型映射与默认模型，将 gpt-5.5 显式映射到可用的替代模型，或改由 API Key 账号承接
 
 
 
@@ -57,10 +58,10 @@ Gemini 支持显式上下文缓存（AI Studio / Vertex / 自建网关上游）�
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.16
+docker pull weishaw/sub2api:0.2.17
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.16
+docker pull ghcr.io/wei-shaw/sub2api:0.2.17
 ```
 
 **One-line install (Linux):**

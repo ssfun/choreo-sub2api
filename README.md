@@ -2,49 +2,50 @@
 
 # Version
 
-v0.2.18
+v0.2.19
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-修复多条流式链路在客户端断开或上游异常中断时的计费与收尾问题；Vertex 账号支持配额上限。
+新增按操作与资源范围授权的管理员 API Key；OpenAI / Composite 分组支持按实际出图张数计费，并新增 GPT-6.1 Terra 模型支持。
 
 ## 新增功能
 
-- Vertex 账号支持配额上限：可设置总额/日/周上限，用满停止调度并发送额度通知，用量列显示配额进度条
-- 分组「允许当前分组生图」开关对 Gemini / Antigravity / 混合分组生效，关闭时 Gemini 系生图请求返回 400
+- 管理员 API Key：可按操作和资源范围授权，支持过期时间和 IP 白名单；只保存不可逆摘要，撤销记录保留用于审计
+- 按张计费：OpenAI 和 Composite 分组新增「按张计费」开关（默认关闭），一次生成多张图时按上游实际返回的张数计费，只对专用图片端点生效
+- OpenAI：支持 GPT-6.1 Terra 模型
+- Gemini：同账号重试次数可通过 gateway.max_same_account_retries_gemini 配置（默认 4，范围 0–10）
+- Grok：管理端新增账号模型目录诊断，可查看来源、可信状态和与本地映射的差异；手动同步和后台观察统一使用同一套解析规则
 
 ## 优化改进
 
-- 账号管理页的平台与状态筛选条件刷新后保留
-- 调度快照解码结果常驻进程内存，降低大分组选号时的 Redis 流量与 CPU 开销
-- 非 Antigravity 请求不再每次查询单账号分组快照，减少数据库回源
-- 账号配额累加按已设置的周期选择更轻的 SQL，缩短计费事务持锁时间
-- 模型映射签名计算改为零分配，降低选号开销
+- Gemini：刷新默认模型列表，移除已停用的 2.0/2.5 系列和 3-pro-preview；连接测试默认模型改为 gemini-3.5-flash
+- Gemini：分组内账号都配置了模型映射时，/v1beta/models 列表和详情按声明的模型返回，与 /v1/models 口径一致
+- Gemini：绑定显式缓存的请求在池模式上游网关账号上，按配置在同一账号重试
+- 国产 Coding Plan 账号遇到请求频率型 429 时改为秒级冷却，不再停调到 5h 窗口结束
+- 模型列表刷新在并发冷启动时不再重复请求上游
+- Grok：原生 Responses 和各转换路径都会记录上游原始响应模型，便于审计
 
 ## Bug 修复
 
-- 修复 Anthropic 账号 chat/responses 兼容流式在客户端断开后 usage 记为 0 的问题，改为读完上游再计费
-- 修复 Anthropic 账号兼容流在上游未正常结束时仍报成功的问题，改为返回协议内错误事件，流内 error 支持换号重试
-- 修复 Gemini 流式中途客户端断开时不计费的问题，改为按已收集用量计费
-- 修复 Gemini prompt 被拦截且只返回缓存命中时 input_tokens 与费用为负的问题
-- 修复 Grok 4.7 Fast 按普通 Grok 4.7 价格计费、少收一半的问题，改按官方 Fast 价格计费
-- 修复 Cloudflare 1010 拦截被当作账号 403 故障、导致账号受处罚的问题（对所有平台生效）
-- 修复模型限流快照原地写入共享对象可能引发并发读写崩溃的问题
-- 修复 Gemini 兼容接口工具参数中 const / 注解字段处理不当导致的请求失败
-- 修复 DeepSeek 图片输入同时携带 image_url 与 url 造成重复负载的问题
-- 异步生图转存下载改为拒绝内网、回环等非公网地址（含每次重定向），非图片内容直接判定失败
-
-## 破坏性变更
-
-- 混合（composite）分组升级后不会自动开启生图开关；未开启的混合分组发起 Gemini 生图请求会返回 400，需要时请到分组设置中手动开启
-- grok-4.7-fast / grok-4.7-build-fast 计费价格调整为官方 Fast 价格（标准版的 2 倍）
+- 修复 Gemini 以 fileData 形式返回的图片未计费的问题
+- 修复渠道按次计费的图片档位丢失 token 用量的问题
+- 修复 DeepSeek V4 Pro 在 9 月 14 日之后定价失效的问题
+- 修复 DeepSeek prompt_cache_hit_tokens 未计为缓存读取的问题
+- 修复 OpenCode 转发 DeepSeek 时 developer 角色导致 422 的问题
+- 修复 Antigravity 非流式畸形工具调用返回空成功响应的问题
+- 修复超大 multipart 图片上传被静默截断的问题，现在直接拒绝
+- 修复分页参数过大时偏移量溢出导致 500 的问题
+- 修复管理员保护规则校验返回 500 的问题，现返回 400
+- 修复保存渠道时覆盖 web_search_emulation 平台维度的问题
+- 修复模型广场分组模型定价被图片兜底档位覆盖的问题
+- 修复 Grok 模型目录快照被失败请求、乱序请求或旧表单覆盖的问题
 
 ## 升级指南
 
-- 升级时会自动执行迁移 246，把已有 Gemini / Antigravity 分组的生图开关设为开启，无需手动操作
-- 使用混合分组提供 Gemini 生图的，升级后请确认该分组已开启「允许当前分组生图」
+- 本版本包含数据库迁移 247（scoped_admin_api_keys 表）和 248（groups.image_count_billing 列），启动时会自动执行
+- Gemini 默认模型列表已移除 2.x 系列；仍需使用这些模型的账号请自行在白名单或模型映射中配置
 
 
 
@@ -55,10 +56,10 @@ v0.2.18
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.18
+docker pull weishaw/sub2api:0.2.19
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.18
+docker pull ghcr.io/wei-shaw/sub2api:0.2.19
 ```
 
 **One-line install (Linux):**

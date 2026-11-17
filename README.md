@@ -2,59 +2,71 @@
 
 # Version
 
-v0.2.21
+v0.2.22
 
 # Releases
 
 > AI API Gateway Platform - 将 AI 订阅配额分发和管理
 
-新增 Claude Fable 5.2 与 Mythos 5.2 支持；OpenAI 用量与计费区分 30m/12h 缓存写入 TTL，并根据实例内存上限自动设定请求体内存预算，减少高并发下误报 503 的情况。
+分组新增强制 OpenAI Ultra Fast 档位，Vertex 账号支持 us/eu 多区域端点；同时大幅优化单用户高并发扣费、调度快照与请求体解析性能。
 
 ## 新增功能
 
-- 支持 Claude Fable 5.2 与 Mythos 5.2：包括模型目录、Anthropic 预设、Bedrock 映射、OpenCode 配置和兜底定价（$8/$40 每百万 token，Fast 模式 2 倍）
-- OpenAI 缓存写入计费按 TTL 拆分：渠道、分组、账号统计价卡新增独立的 12h 缓存写入价（GPT-5.6 / GPT-6 系列未配置时默认按输入价 2.5 倍；已配置通用写入价的价卡不受影响），管理员用量详情按实际 TTL 展示
-- Antigravity 账号用量单元格新增「查询」按钮，可跳过缓存强制刷新用量
-- EasyPay 支付实例可单独配置退款成功码（默认 1，可选 0），兼容退款以 code=0 表示成功的易支付网关
+- 分组强制 Ultra Fast：OpenAI / Composite 分组可强制 service_tier=ultrafast，仅对支持的模型（GPT-6 Astra、GPT-6.1 Sol）生效，可与强制 Fast 并存（优先级 Ultra Fast > Fast > 客户端）
+- Vertex 多区域：Gemini 账号支持 us/eu 多区域端点，不支持的模型自动走 global；发往多区域的请求在默认定价下按 1.1 倍计费（分组/渠道自定义价格不受影响）
+- 新增 Gemini 4 Carbon 模型支持，补齐 Gemini 4 Hydrogen 计费
+- OpenAI 透传账号可选按模型白名单过滤调度
+- 并发等待 ping 支持配置 concurrency.ping_interval=0 关闭，避免提前写入 HTTP 状态码
 
 ## 优化改进
 
-- 请求体内存预算未配置时，自动取进程内存上限的 1/4（取物理内存、cgroup 限制、GOMEMLIMIT 中的最小值），最低 1GiB
-- API 密钥列表不再等近 30 天用量统计返回才渲染，并为用量统计新增覆盖索引，大数据量下 /keys 页面不再长时间停在骨架屏
-- 账号列表刷新时保留现有行和配额数值，不再整表闪烁成骨架屏
-- 系统设置页的保存按钮改为吸附在视口右下角的浮标，长表单不用滚到底部也能保存
-- 余额充值倍率支持最多 6 位小数，便于跟随实时汇率
-- 安全审计任务入队后立即唤醒本进程 worker 认领，不再平均等待约 250ms
-- OpenAI WebSocket 首 token 时间改为遵循管理员配置的 TTFT 口径，与 SSE 保持一致
-- 客户端未提供会话标识时，Responses 会话种子在工具回合中保持稳定，减少粘性会话中途切换账号
-- 内置 Claude Code CLI 版本基线升至 2.1.321
+- 同一用户的扣费按用户通道合并结算，消除余额热点行排队，单用户高并发下延迟与内存显著下降
+- 调度快照加载与数据库回源按 bucket 合并，减少大分组选号时的重复加载与整组复制
+- 请求体热点路径改用零拷贝读取，Anthropic 请求路径与流事件转发减少 JSON 解码与复制
+- 分组日汇总重建与保留期清理不再阻塞 usage_logs 写入，避免清理期间用量记录丢失
+- 上游死连接检测由约 165 秒缩短到约 30 秒
+- 启动时远程价格哈希检查改为后台进行，不再阻塞服务启动
+- Gemini 原生请求按稳定前缀生成粘性会话哈希，提升隐式缓存命中
+- Bedrock 按错误语义区分封号、用例缺失、限流与内容过滤，429 只冷却对应模型
+- Kimi 支持新版月度套餐额度解析
+- Codex 分叉会话沿用父会话的 prompt cache key，保留缓存命中
+- 模型白名单禁止添加通配符条目并给出提示
 
 ## Bug 修复
 
-- 修复 OpenAI 合成的 reasoning effort 未应用 effort 映射规则和上限校验的问题；保留已配置的 GLM 降级语义
-- 修复 OpenAI 显式配置的模型级冷却规则对 overloaded/slow_down 及流内 503 不生效的问题；关键词只匹配实际错误字段
-- 修复 Codex 元数据事件（codex.rate_limits 等）提前提交响应流，导致后续上游过载无法 failover 的问题
-- 修复原生 Responses WebSocket 在后续轮次限流时重放首帧，可能导致任务上下文错乱的问题（现以 1013 关闭，由客户端重连）
-- 修复 OpenAI OAuth 池化 WebSocket 在未声明搜索的连接上发起 web_search 被上游拒绝的问题
-- 修复 Codex Desktop 注入的页面上下文导致首个 Responses 请求返回 400 的问题
-- 修复原生 Codex 生图请求因心跳提前写出 200、掩盖上游错误状态码的问题
-- 修复 /v1/responses 重建函数调用时丢失 encrypted_function_args 与 namespace 的问题
-- 修复 CC Switch 的 reasoning 封装被当作 encrypted_content 发往上游的问题
-- 修复 Anthropic 兼容路径（Chat Completions / Responses）忽略账号自定义错误策略的问题
-- 修复 Gemini 兼容入口非流式响应把思考摘要混入正文的问题
-- 修复 Antigravity 并行工具结果中的图片打断 functionResponse 序列导致上游 400 的问题
-- 修复 Antigravity Pro 账号 Argon 配额与其他 Gemini 配额共用冷却、互相误伤的问题
-- 修复账号信息加载失败时已占用的并发槽位未释放、要等 TTL 过期才恢复的问题
-- 修复刷新令牌并发轮换时同一令牌可被重复使用的问题
-- 修复定价目录哈希与内容版本不一致时，后续同步一直被跳过的问题
-- 修复 Sonnet 5.5 兜底缓存读取价格错误的问题（改为 $0.10 每百万 token）
-- 修复 OpenAI 普通输入免费时 Fast 倍率丢失的问题
-- 修复含非法 UTF-8 的 Responses 请求体被当作上游可重试错误的问题，现直接返回 400
-
-## 升级指南
-
-- 本次新增两个数据库迁移，升级时自动执行。其中 249 在 usage_logs 上用 CONCURRENTLY 建索引，不锁表，但表较大时首次启动会耗时较长
-- 请求体内存预算的配置键是 gateway.request_body_memory_budget_bytes（v0.2.20 发布说明误写为 security.*），需要固定值时请显式设置
+- 修复 GPT-6.1 Sol 的 Ultra Fast 计费倍率（由 2 倍修正为 6 倍，与 Astra 一致）
+- 修复 Gemini 粘性会话换号时强制按缓存读取计费的问题，改为按上游实际用量计费
+- 修复 Gemini 流式同名并行工具调用、分片工具调用参数快照丢失的问题
+- 修复 Gemini 兼容入口未转发 response_format 结构化输出的问题
+- 修复 Antigravity 兼容流思考内容未流式输出、空流后未释放粘性账号的问题
+- 修复 OpenAI 首个输出前的上游 keepalive 未转发、keepalive 后 SSE 错误无法下发的问题
+- 修复 OpenAI 兼容路径输出后的流错误未应用账号副作用、Messages 桥接首包前错误未 failover 的问题
+- 修复 OpenAI 工具 Schema 中 patternProperties、Python re 不支持的正则、嵌套 schema 编辑的兼容问题
+- 修复 Codex additional_tools 声明 ID 被改写、HTTP Responses 额外上下文未规范化的问题
+- 修复 Chat Completions 转 Responses 时 json_schema 默认 strict、对话中途 system 消息、加密函数调用内容丢失的问题
+- 修复 Chat Completions 转 Anthropic 时客户端 metadata.user_id 丢失的问题（API Key 账号）
+- 修复 Anthropic 兼容路由未执行 effort 策略、per-turn beta 丢失输出配置的问题
+- 修复 Composite 路由响应中公开模型名未还原、模型改写范围过大的问题
+- 修复 count_tokens 透传重复请求头的问题
+- 修复客户端断开后粘性绑定未写入的问题
+- 修复 Claude 并发 token 轮换后请求失败的问题
+- 修复 Claude 账号测试默认模型，改为 claude-sonnet-4-6
+- 修复 Fable 周额度读取与 7d_oi 窗口恢复后模型限流未解除的问题，5h 窗口滚动不再清空周用量读数
+- 修复 5h 窗口起点与额度重置时间不对齐的问题
+- 修复调度快照遗漏冷却中账号、openai_capabilities 与透传模型过滤配置的问题
+- 修复 RPM 覆盖值误用于其他分组、分组倍率/RPM 同步失败时清空覆盖配置的问题
+- 修复支付宝退款重试可能重复退款的问题
+- 修复按账户筛选时模型/端点分布的实际扣费被替换为账号成本的问题
+- 修复 Chat 回退与原生 Anthropic 路径响应模型记录丢失的问题
+- 修复 DeepSeek 显式 token 价格覆盖不生效的问题，补充硅基流动 Qwen3-Embedding / Reranker 兜底定价
+- 修复联网搜索在部分平台忽略账号级模式的问题
+- 修复 OpenAI 额度刷新失败导致渠道监控在异常与正常间反复切换的问题
+- 修复 Grok 媒体错误信息丢失、服务端搜索调用混入工具调用的问题
+- 修复国内厂商额度单元格与 Gemini 用量刷新时不更新或消失的问题
+- 修复渠道 Bedrock 兼容开关保存类型错误的问题
+- 修复设置注入的 HTML 被缓存导致品牌信息过期与 CSP nonce 不匹配的问题
+- 修复登录回填邮箱身份失败时 panic 的问题
+- 修复无法设置 TCP_USER_TIMEOUT 的平台上上游拨号失败的问题
 
 
 
@@ -65,10 +77,10 @@ v0.2.21
 **Docker:**
 ```bash
 # Docker Hub
-docker pull weishaw/sub2api:0.2.21
+docker pull weishaw/sub2api:0.2.22
 
 # GitHub Container Registry
-docker pull ghcr.io/wei-shaw/sub2api:0.2.21
+docker pull ghcr.io/wei-shaw/sub2api:0.2.22
 ```
 
 **One-line install (Linux):**
